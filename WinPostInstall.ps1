@@ -48,7 +48,7 @@ https://github.com/franckferman/WinPostInstall
 
 
 param(
-  [switch]$Help
+  [switch]$Help,
   [switch]$AfterRestart
 )
 
