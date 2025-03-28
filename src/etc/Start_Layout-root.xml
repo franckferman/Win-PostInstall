@@ -1,0 +1,20 @@
+{ "primaryOEMPins": [ 
+    { "packagedAppId": "OEM.App1_1abcde2f3ghjk!App"}, 
+    { "desktopAppLink": "%ALLUSERSPROFILE%\\Microsoft\\Windows\\Start Menu\\Programs\\MyWin32App.lnk"}, 
+    { "packagedAppId": "Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App", 
+      "tileId": "MSEdge.paomdnjincdkenhiicpl.UserData.Default"} 
+  ], 
+  "secondaryOEMPins": [ 
+    { "packagedAppId": "Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App", 
+      "tileId": "MSEdge.anfoedbkjbcacemdbigf.UserData.Default" }, 
+    { "desktopAppId": "Contoso.Desktop.Example.AUMID"} 
+  ], 
+  "firstRunOEMPins": [ 
+    { "desktopAppLink": "%ALLUSERSPROFILE%\\Microsoft\\Windows\\Start Menu\\Programs\\PutMeInRecommended.lnk", 
+      "caption": { 
+        "en-US": "(localized caption text for US English)", 
+        "de": "(localized caption text for German)", 
+        "default": "(fallback caption text for other languages)" } 
+    } 
+  ] 
+}
