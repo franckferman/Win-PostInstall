@@ -4884,11 +4884,12 @@ function Install-CoreApplications {
   Alter-PathVariable -Paths 
   @("$env:USERPROFILE\AppData\Local\Programs\Python\Python311", "$env:USERPROFILE\AppData\Roaming\Python\Python311\Scripts", "$env:USERPROFILE\.rustup\toolchains\stable-x86_64-pc-windows-gnu\bin", "$env:USERPROFILE\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin", "$env:USERPROFILE\AppData\Roaming\npm", "$env:USERPROFILE\go\bin", "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin", "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin", "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin", "C:\Program Files\dotnet", "C:\Program Files\JetBrains\Toolbox\scripts", "C:\Tools\x64dbg", "C:\Tools\PE-bear", "C:\Tools\dnSpyEx", "C:\Tools\Cutter", "C:\Tools\Ghidra", "C:\Tools\Velociraptor", "C:\Tools\Nmap", "C:\Tools", "C:\HashiCorp\Vagrant\bin", "C:\Program Files\Terraform", "C:\Program Files\OpenVPN Connect", "C:\Program Files\WireGuard", "C:\Program Files\PowerToys", "C:\Program Files\AutoHotkey", "$env:USERPROFILE\.dotnet\tools", "$env:USERPROFILE\scoop\shims")
   Write-Host ""
-  Install-Executables -ExecutableNames @("Ankama Launcher-Setup.exe", "OfficeSetup.exe", "Rockstar-Games-Launcher.exe")
-  Write-Host ""
-  Install-eDEX
-  Write-Host ""
-  Install-DaVinciResolve
+  Install-Executables -ExecutableNames @("Ankama Launcher-Setup.exe", "OfficeSetup.exe")
+  # Install-Executables -ExecutableNames @("Ankama Launcher-Setup.exe", "OfficeSetup.exe", "Rockstar-Games-Launcher.exe")
+  # Write-Host ""
+  # Install-eDEX
+  # Write-Host ""
+  # Install-DaVinciResolve
 }
 
 function Apply-AdvancedSecurityHardening {
@@ -4959,7 +4960,7 @@ function main {
 if ($Help) {
   Display-Help
   return
-  } elseif {
+  } elseif ($AfterRestart) {
   Enable-WSL2
   Install-WingetApplications -AppList @("Debian.Debian", "Canonical.Ubuntu", "OffSec.KaliLinux")
   Install-WindowsUpdates
