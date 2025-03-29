@@ -4879,7 +4879,7 @@ function Install-CoreApplications {
   Write-Host ""
   Install-MSStoreAppById -AppIdList @("9PLFNLNT3G5G", "Guru3D.Afterburner", "ModernFlyouts.ModernFlyouts")
   Write-Host ""
-  Install-WingetApplications -AppList @("Mozilla.Firefox", "GoLang.Go", "Oracle.JavaRuntimeEnvironment", "Syncthing.Syncthing", "Oracle.JDK.24", "Chocolatey.Chocolatey", "Chocolatey.ChocolateyGUI", "RustDesk.RustDesk", "Rustlang.Rustup", "Rustlang.Rust.GNU", "Rustlang.Rust.MSVC", "Rustlang.mdBook", "WildfireGames.0AD", "7zip.7zip", "Adobe.CreativeCloud", "Anki.Anki", "Audacity.Audacity", "Balena.Etcher", "BinanceTech.Binance", "PortSwigger.BurpSuite.Community", "Hex-Rays.IDA.Free", "Microsoft.WinDbg", "Mozilla.Firefox.DeveloperEdition", "Google.Chrome.Dev", "CrystalDewWorld.CrystalDiskInfo", "Nvidia.GeForceNow", "WinSCP.WinSCP", "WireGuard.WireGuard", "Nvidia.RTXVoice", "WiresharkFoundation.Wireshark", "VideoLAN.VLC", "Ubisoft.Connect", "SublimeHQ.SublimeText.4", "SteelSeries.GG", "SteelSeries.SteelSeriesEngine", "Sandboxie.Classic", "Piriform.Speccy", "PuTTY.PuTTY", "AutomatedLab", "JanDeDobbeleer.OhMyPosh", "Cockos.REAPER", "Oracle.VirtualBox", "OnionShare.OnionShare", "Microsoft.Office", "Obsidian.Obsidian", "Nvidia.CUDA", "OpenJS.NodeJS", "Mojang.MinecraftLauncher", "Microsoft.Teams", "Lazarus.Lazarus", "Maltego.Maltego", "HexChat.HexChat", "GOG.Galaxy", "Rufus.Rufus", "Giuspen.Cherrytree", "Obsidian.Obsidian", "yang991178.fluent-reader", "Opera.OperaGX", "Opera.Opera", "Opera.Opera.Dev", "MullvadVPN.MullvadBrowser", "NASM.NASM", "Git.Git", "GnuCash.GnuCash", "JetBrains.Hub", "Google.AndroidStudio", "Docker.DockerDesktop", "Docker.DockerCompose", "Docker.DockerCLI", "Kubernetes.kubectl", "Ollama.Ollama", "RazerInc.RazerInstaller", "RazerInc.RazerInstaller4", "Mixxx.Mixxx", "Transmission.Transmission", "martinrotter.RSSGuard", "Proton.ProtonVPN", "Proton.ProtonPass", "Proton.ProtonMailBridge", "Proton.ProtonMail", "Proton.ProtonDrive", "SleuthKit.Autopsy", "BleachBit.BleachBit", "mRemoteNG.mRemoteNG", "WinDirStat.WinDirStat", "Xmind.Xmind", "OpenVPNTechnologies.OpenVPN", "Python.Python.3.13", "Discord.Discord", "Element.Element", "Notepad++.Notepad++", "Brave.Brave", "TheDocumentFoundation.LibreOffice", "7zip.7zip", "AppWork.JDownloader", "Microsoft.VisualStudio.2022.Entreprise", "EpicGames.EpicGamesLauncher", "Mozilla.Thunderbird", "Microsoft.WindowsTerminal", "Google.Chrome", "ModernFlyouts.ModernFlyouts", "Guru3D.Afterburner", "Valve.Steam", "VideoLAN.VLC", "ShareX.ShareX", "Cygwin.Cygwin", "MSYS2.MSYS2", "vim.vim", "qBittorrent.qBittorrent", "Rainmeter.Rainmeter", "MullvadVPN.MullvadVPN", "OBSProject.OBSStudio", "Microsoft.Sysinternals", "Microsoft.Sysinternals.ProcessExplorer", "Microsoft.Sysinternals.TCPView", "Microsoft.Sysinternals.BGInfo", "Microsoft.Sysinternals.Autoruns", "Microsoft.Sysinternals.Desktops", "Microsoft.Sysinternals.ProcessMonitor", "Microsoft.Sysinternals.PsTools", "Microsoft.Sysinternals.Strings", "Microsoft.Sysinternals.Sysmon", "Microsoft.Sysinternals.TCPView", "Microsoft.Sysinternals.Whois", "KeePassXCTeam.KeePassXC", "AutoHotkey.AutoHotkey", "IDRIX.VeraCrypt", "TorProject.TorBrowser", "voidtools.Everything", "HandBrake.HandBrake", "OpenWhisperSystems.Signal", "RiotGames.Valorant.EU", "OpenWhisperSystems.Signal", "Microsoft.AIShell", "GIMP.GIMP", "Pinta.Pinta", "Krita.Krita", "OpenVPNTechnologies.OpenVPNConnect", "Microsoft.VCRedist.2013.x64", "Microsoft.VCRedist.2005.x64", "Microsoft.VCRedist.2008.x64", "Microsoft.VCRedist.2010.x64", "Microsoft.VCRedist.2012.x64", "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2005.x86", "Microsoft.VCRedist.2008.x86", "Microsoft.VCRedist.2012.x86", "Microsoft.VCRedist.2013.x86", "nomic.gpt4all", "Telegram.TelegramDesktop", "TeamViewer.TeamViewer", "SlackTechnologies.Slack", "Hashicorp.Vagrant", "Microsoft.VCRedist.2015+.arm64", "Rizin.Cutter", "OO-Software.ShutUp10", "Logseq.Logseq", "Microsoft.PowerToys", "Hashicorp.Terraform", "Axosoft.GitKraken", "ElementLabs.LMStudio", "Yubico.YubikeyManager", "Yubico.YubiKeyManagerCLI", "VSCodium.VSCodium", "Microsoft .NET SDK 9.0", "Microsoft.VisualStudio.2022.BuildTools", "Microsoft.VisualStudio.2019.BuildTools", "hasherezade.PE-bear", "Insecure.Nmap", "OnionShare.OnionShare", "OliverBetz.ExifTool", "dnSpyEx.dnSpy", "SyncTrayzor.SyncTrayzor", "XAMPP 8.2")
+  Install-WingetApplications -AppList @("Mozilla.Firefox", "GoLang.Go", "Oracle.JavaRuntimeEnvironment", "Syncthing.Syncthing", "Oracle.JDK.24", "Chocolatey.Chocolatey", "Chocolatey.ChocolateyGUI", "RustDesk.RustDesk", "Rustlang.Rustup", "Rustlang.Rust.GNU", "Rustlang.Rust.MSVC", "Rustlang.mdBook", "WildfireGames.0AD", "7zip.7zip", "Adobe.CreativeCloud", "Anki.Anki", "Audacity.Audacity", "Balena.Etcher", "BinanceTech.Binance", "PortSwigger.BurpSuite.Community", "Hex-Rays.IDA.Free", "Microsoft.WinDbg", "Mozilla.Firefox.DeveloperEdition", "Google.Chrome.Dev", "CrystalDewWorld.CrystalDiskInfo", "Nvidia.GeForceNow", "WinSCP.WinSCP", "WireGuard.WireGuard", "Nvidia.RTXVoice", "WiresharkFoundation.Wireshark", "VideoLAN.VLC", "Ubisoft.Connect", "SublimeHQ.SublimeText.4", "SteelSeries.GG", "SteelSeries.SteelSeriesEngine", "Sandboxie.Classic", "Piriform.Speccy", "PuTTY.PuTTY", "AutomatedLab", "JanDeDobbeleer.OhMyPosh", "Cockos.REAPER", "Oracle.VirtualBox", "OnionShare.OnionShare", "Microsoft.Office", "Obsidian.Obsidian", "Nvidia.CUDA", "OpenJS.NodeJS", "Mojang.MinecraftLauncher", "Microsoft.Teams", "Lazarus.Lazarus", "Maltego.Maltego", "HexChat.HexChat", "GOG.Galaxy", "Rufus.Rufus", "Giuspen.Cherrytree", "Obsidian.Obsidian", "yang991178.fluent-reader", "Opera.OperaGX", "Opera.Opera", "Opera.Opera.Dev", "MullvadVPN.MullvadBrowser", "NASM.NASM", "Git.Git", "GnuCash.GnuCash", "JetBrains.Hub", "Google.AndroidStudio", "Docker.DockerDesktop", "Docker.DockerCompose", "Docker.DockerCLI", "Kubernetes.kubectl", "Ollama.Ollama", "RazerInc.RazerInstaller", "RazerInc.RazerInstaller4", "Mixxx.Mixxx", "Transmission.Transmission", "martinrotter.RSSGuard", "Proton.ProtonVPN", "Proton.ProtonPass", "Proton.ProtonMailBridge", "Proton.ProtonMail", "Proton.ProtonDrive", "SleuthKit.Autopsy", "BleachBit.BleachBit", "mRemoteNG.mRemoteNG", "WinDirStat.WinDirStat", "Xmind.Xmind", "OpenVPNTechnologies.OpenVPN", "Python.Python.3.13", "Discord.Discord", "Element.Element", "Notepad++.Notepad++", "Brave.Brave", "TheDocumentFoundation.LibreOffice", "7zip.7zip", "AppWork.JDownloader", "Microsoft.VisualStudio.2022.Entreprise", "EpicGames.EpicGamesLauncher", "Mozilla.Thunderbird", "Microsoft.WindowsTerminal", "Google.Chrome", "ModernFlyouts.ModernFlyouts", "Guru3D.Afterburner", "Valve.Steam", "VideoLAN.VLC", "ShareX.ShareX", "Cygwin.Cygwin", "MSYS2.MSYS2", "vim.vim", "qBittorrent.qBittorrent", "Rainmeter.Rainmeter", "MullvadVPN.MullvadVPN", "OBSProject.OBSStudio", "Microsoft.Sysinternals", "Microsoft.Sysinternals.ProcessExplorer", "Microsoft.Sysinternals.TCPView", "Microsoft.Sysinternals.BGInfo", "Microsoft.Sysinternals.Autoruns", "Microsoft.Sysinternals.Desktops", "Microsoft.Sysinternals.ProcessMonitor", "Microsoft.Sysinternals.PsTools", "Microsoft.Sysinternals.Strings", "Microsoft.Sysinternals.Sysmon", "Microsoft.Sysinternals.TCPView", "Microsoft.Sysinternals.Whois", "KeePassXCTeam.KeePassXC", "AutoHotkey.AutoHotkey", "IDRIX.VeraCrypt", "TorProject.TorBrowser", "voidtools.Everything", "HandBrake.HandBrake", "OpenWhisperSystems.Signal", "RiotGames.Valorant.EU", "OpenWhisperSystems.Signal", "Microsoft.AIShell", "GIMP.GIMP", "Pinta.Pinta", "Krita.Krita", "OpenVPNTechnologies.OpenVPNConnect", "Microsoft.VCRedist.2013.x64", "Microsoft.VCRedist.2005.x64", "Microsoft.VCRedist.2008.x64", "Microsoft.VCRedist.2010.x64", "Microsoft.VCRedist.2012.x64", "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2005.x86", "Microsoft.VCRedist.2008.x86", "Microsoft.VCRedist.2012.x86", "Microsoft.VCRedist.2013.x86", "nomic.gpt4all", "Telegram.TelegramDesktop", "TeamViewer.TeamViewer", "SlackTechnologies.Slack", "Hashicorp.Vagrant", "Microsoft.VCRedist.2015+.arm64", "Rizin.Cutter", "OO-Software.ShutUp10", "Logseq.Logseq", "Microsoft.PowerToys", "Hashicorp.Terraform", "Axosoft.GitKraken", "ElementLabs.LMStudio", "Yubico.YubikeyManager", "Yubico.YubiKeyManagerCLI", "VSCodium.VSCodium", "Microsoft .NET SDK 9.0", "Microsoft.VisualStudio.2022.BuildTools", "Microsoft.VisualStudio.2019.BuildTools", "hasherezade.PE-bear", "Insecure.Nmap", "OnionShare.OnionShare", "OliverBetz.ExifTool", "dnSpyEx.dnSpy", "SyncTrayzor.SyncTrayzor", "XAMPP 8.2", "GitHub.GitLFS")
   Write-Host ""
   Alter-PathVariable -Paths 
   @("$env:USERPROFILE\AppData\Local\Programs\Python\Python311", "$env:USERPROFILE\AppData\Roaming\Python\Python311\Scripts", "$env:USERPROFILE\.rustup\toolchains\stable-x86_64-pc-windows-gnu\bin", "$env:USERPROFILE\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin", "$env:USERPROFILE\AppData\Roaming\npm", "$env:USERPROFILE\go\bin", "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin", "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin", "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin", "C:\Program Files\dotnet", "C:\Program Files\JetBrains\Toolbox\scripts", "C:\Tools\x64dbg", "C:\Tools\PE-bear", "C:\Tools\dnSpyEx", "C:\Tools\Cutter", "C:\Tools\Ghidra", "C:\Tools\Velociraptor", "C:\Tools\Nmap", "C:\Tools", "C:\HashiCorp\Vagrant\bin", "C:\Program Files\Terraform", "C:\Program Files\OpenVPN Connect", "C:\Program Files\WireGuard", "C:\Program Files\PowerToys", "C:\Program Files\AutoHotkey", "$env:USERPROFILE\.dotnet\tools", "$env:USERPROFILE\scoop\shims")
@@ -4902,6 +4902,70 @@ function Apply-AdvancedSecurityHardening {
 function Setup-Environment {
   Create-FirefoxProfile -Overwrite
   Initialize-UserDirectoryStructure -Overwrite
+}
+
+
+function Setup-ExegolWithWSL {
+    <#
+    .SYNOPSIS
+    👽 Installs Exegol in WSL with full PowerShell tab-completion.
+
+    .DESCRIPTION
+    Ensures WSL is configured (Debian recommended), Docker integration is enabled,
+    installs pipx, Exegol, argcomplete, and sets up PowerShell autocompletion.
+
+    .NOTES
+    Shells don’t invade systems. Users invite them in.
+    #>
+
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[👽] $ts - Interdimensional Exegol deployment initiated..." -ForegroundColor Cyan
+
+    Write-Host "[🧠] Ensure you have at least one WSL distro installed. Recommended: Debian." -ForegroundColor Yellow
+    Pause-ForUser -Message "[🚀] Press Enter when you're ready to proceed."
+
+    Write-Host "[🛸] Now open Docker Desktop → Settings → Resources → WSL Integration." -ForegroundColor Yellow
+    Write-Host "[🧬] ➤ Enable WSL Integration for your default distro (e.g., Debian)." -ForegroundColor Yellow
+    Write-Host "[💾] ➤ Check the box for the correct distro." -ForegroundColor Yellow
+    Write-Host "[🔁] ➤ Click Apply & Restart." -ForegroundColor Yellow
+    Pause-ForUser -Message "[🚨] Press Enter once Docker is configured."
+
+    Write-Host "[📦] Installing pipx in system Python..." -ForegroundColor Gray
+    python.exe -m pip install pipx
+
+    Write-Host "[🚀] Installing Exegol using pipx..." -ForegroundColor Gray
+    pipx install exegol
+    pipx ensurepath
+    exegol install
+
+    Write-Host "[🔧] Installing argcomplete..." -ForegroundColor Gray
+    pipx install argcomplete
+
+    $profileFolder = "$HOME\Documents\WindowsPowerShell"
+    if (-not (Test-Path $profileFolder)) {
+        Write-Host "[📁] Creating missing profile folder: $profileFolder" -ForegroundColor Gray
+        New-Item -Path $profileFolder -ItemType Directory -Force | Out-Null
+    }
+
+    $completionScript = "$profileFolder\exegol_completion.psm1"
+    if (-not (Test-Path $completionScript)) {
+        Write-Host "[📜] Generating Exegol PowerShell autocompletion script..." -ForegroundColor Gray
+        & bash -c "register-python-argcomplete --no-defaults --shell powershell exegol" | Out-File -Encoding ASCII -FilePath $completionScript -Force
+    } else {
+        Write-Host "[⚠️] Completion script already exists: $completionScript" -ForegroundColor Yellow
+    }
+
+    $profileContent = Get-Content $PROFILE -ErrorAction SilentlyContinue
+    if ($profileContent -notmatch "exegol_completion") {
+        Write-Host "[⚙️] Appending import statement to $PROFILE" -ForegroundColor Gray
+        Add-Content -Path $PROFILE -Value "`nImport-Module '$completionScript'"
+        Add-Content -Path $PROFILE -Value "Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete"
+    } else {
+        Write-Host "[ℹ️] Exegol completion already configured in $PROFILE" -ForegroundColor Yellow
+    }
+
+    $done = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[✅] $done - Exegol setup complete. Summon the shell. Become the APT." -ForegroundColor Green
 }
 
 
@@ -4951,6 +5015,8 @@ function main {
   Write-Host ""
   Remove-NonZipFiles -TaskList @(".\lib", ".\src\softwares\DaVinci_Resolve\DaVinci_Resolve_19.1.4_Windows")
   Write-Host ""
+  Install-Executables -ExecutableNames "wsl_update_x64.msi"
+  Write-Host ""
   Install-WindowsUpdates
   Write-Host ""
   Restart-System
@@ -4961,10 +5027,12 @@ if ($Help) {
   Display-Help
   return
   } elseif ($AfterRestart) {
+  Install-Executables -ExecutableNames "wsl_update_x64.msi"
   Enable-WSL2
   Install-WingetApplications -AppList @("Debian.Debian", "Canonical.Ubuntu", "OffSec.KaliLinux")
   Install-WindowsUpdates
   Remove-BloatwarePackages -AppsList @("Microsoft.GetHelp", "Microsoft.People", "Microsoft.YourPhone", "Microsoft.GetStarted", "Microsoft.Messaging", "Microsoft.MicrosoftSolitaireCollection", "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "Microsoft.Office.OneNote", "Microsoft.OneConnect", "Microsoft.SkypeApp", "Microsoft.CommsPhone", "Microsoft.Office.Sway", "Microsoft.WindowsFeedbackHub", "Microsoft.ConnectivityStore", "Microsoft.BingFoodAndDrink", "Microsoft.BingHealthAndFitness", "Microsoft.BingTravel", "Microsoft.WindowsReadingList", "DB6EA5DB.MediaSuiteEssentialsforDell", "DB6EA5DB.Power2GoforDell", "DB6EA5DB.PowerDirectorforDell", "DB6EA5DB.PowerMediaPlayerforDell", "DellInc.DellDigitalDelivery", "*Disney*", "*EclipseManager*", "*ActiproSoftwareLLC*", "*AdobeSystemsIncorporated.AdobePhotoshopExpress*", "*Duolingo-LearnLanguagesforFree*", "*PandoraMediaInc*", "*CandyCrush*", "*BubbleWitch3Saga*", "*Wunderlist*", "*Flipboard*", "*Royal Revolt*", "*Sway*", "*Speed Test*", "46928bounde.EclipseManager", "613EBCEA.PolarrPhotoEditorAcademicEdition", "7EE7776C.LinkedInforWindows", "89006A2E.AutodeskSketchBook", "ActiproSoftwareLLC.562882FEEB491", "CAF9E577.Plex", "ClearChannelRadioDigital.iHeartRadio", "Drawboard.DrawboardPDF", "Fitbit.FitbitCoach", "Flipboard.Flipboard", "KeeperSecurityInc.Keeper", "Microsoft.BingNews", "TheNewYorkTimes.NYTCrossword", "WinZipComputing.WinZipUniversal", "A278AB0D.MarchofEmpires", "6Wunderkinder.Wunderlist", "A278AB0D.DisneyMagicKingdoms", "2FE3CB00.PicsArt-PhotoStudio", "D52A8D61.FarmVille2CountryEscape", "D5EA27B7.Duolingo-LearnLanguagesforFree", "DB6EA5DB.CyberLinkMediaSuiteEssentials", "GAMELOFTSA.Asphalt8Airborne", "NORDCURRENT.COOKINGFEVER", "PandoraMediaInc.29680B314EFC2", "Playtika.CaesarsSlotsFreeCasino", "ShazamEntertainmentLtd.Shazam", "ThumbmunkeysLtd.PhototasticCollage", "TuneIn.TuneInRadio", "XINGAG.XING", "flaregamesGmbH.RoyalRevolt2", "king.com.*", "king.com.BubbleWitch3Saga", "king.com.CandyCrushSaga", "king.com.CandyCrushSodaSaga", "*Clipchamp*", "*Solitaire*")
+  Setup-ExegolWithWSL
   } else {
   main
   }
