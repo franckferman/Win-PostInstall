@@ -4,42 +4,43 @@
 
 <#
 .SYNOPSIS
-WinPostInstall is a post-installation automation script for configuring, customizing, and hardening Windows systems.
+WinPostInstall automates the configuration, customization, and hardening of Windows systems post-installation.
 
 .DESCRIPTION
-WinPostInstall is a modular PowerShell script designed to automate the setup of freshly installed Windows machines. 
-It handles everything from system configuration, privacy tweaks, app installations (via WinGet & Microsoft Store), Windows hardening, developer tools, to theming and bloatware removal.
+WinPostInstall is a modular and idempotent PowerShell script crafted to transform a freshly installed Windows system into a hardened, decluttered, and operational environment.
 
-This script is ideal for power users, developers, cybersecurity professionals, and system administrators who want a fully customized and optimized Windows environment without manual effort.
+It encapsulates system configuration, privacy and telemetry reduction, curated software provisioning (via Winget, Microsoft Store, or local binaries), security enhancements (Defender, WDAC, services, firewall), interface theming, and the removal of superfluous components.
 
-WinPostInstall is interactive, colorful, and clean — built with modularity and idempotence in mind. 
-The user experience is enhanced with timestamps, clear status messages, and smart checks to avoid redundant actions.
+Tailored for developers, system administrators, and security professionals, it offers precision, consistency, and autonomy — all in a single pass.
 
 .INPUTS
-None. All configurations are handled internally or interactively where needed.
+None. All logic is internal or prompted contextually.
 
 .OUTPUTS
-Console output with styled messages (success, warning, error) and optional logs depending on configuration.
+Structured terminal output with styled status indicators. Optional logs may be generated.
 
 .REQUIREMENTS
-- PowerShell 5.1 or later 
-- Administrator privileges 
-- Internet access for Winget and Store apps
+- PowerShell 5.1 or higher
+- Administrator privileges
+- Internet access (for package retrieval)
 
 .LICENSE
-Distributed under the GNU Affero General Public License v3.0. See [LICENSE](https://github.com/franckferman/franckferman/blob/stable/LICENSE) for full license details.
+GNU Affero General Public License v3.0  
+https://github.com/franckferman/franckferman/blob/stable/LICENSE
 
 .CREDITS
-[HardeningKitty](https://github.com/scipag/HardeningKitty)
-[Win11Debloat](https://github.com/Raphire/Win11Debloat)
+With inspiration from:  
+- HardeningKitty — https://github.com/scipag/HardeningKitty  
+- Win11Debloat — https://github.com/Raphire/Win11Debloat  
+- Harden-Windows-Security — https://github.com/HotCakeX/Harden-Windows-Security
 
 .EXAMPLE
-PS > Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process; .\WinPostInstall.ps1
+PS C:\> Set-ExecutionPolicy Bypass -Scope Process -Force; .\WinPostInstall.ps1
 
 .NOTES
-Author  : Franck FERMAN
-Version : 1.0.0
-License : GNU AGPLv3
+Author  : Franck FERMAN  
+Version : 1.0.0  
+License : GNU AGPLv3  
 GitHub  : https://github.com/franckferman/
 
 .LINK
@@ -47,183 +48,211 @@ https://github.com/franckferman/WinPostInstall
 #>
 
 
+[CmdletBinding()]
 param(
-  [switch]$Help,
-  [switch]$AfterRestart
+    [Parameter(HelpMessage="Display usage information and exit.")]
+    [switch]$Help,
+
+    [Parameter(HelpMessage="Execute post-reboot logic (used after system restart).")]
+    [switch]$AfterRestart
 )
 
 
 function Get-Banner {
-  param(
-    [Parameter(Mandatory = $false)]
-    [string]$BannerType
-  )
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false, HelpMessage = "The banner name or banner group to retrieve.")]
+        [string]$BannerType
+    )
+
+    <#
+    .SYNOPSIS
+    Retrieves an ASCII banner by name or from a group of themed banners.
+
+    .DESCRIPTION
+    Returns a predefined ASCII banner based on the given name or category.
+    If no name is specified, a random banner is returned.
+
+    .PARAMETER BannerType
+    Optional. The name of the banner to retrieve, or a group name (e.g., 'Space_Banners').
+    If omitted, a random banner from all available ones will be returned.
+
+    .OUTPUTS
+    [string] — An ASCII banner string.
+
+    .EXAMPLE
+    Get-Banner -BannerType "Window_PS_Terminal"
+
+    .EXAMPLE
+    Get-Banner -BannerType "Space_Banners"
+    #>
 
 $Banners = @{
   "Window_PS_Terminal" = @"
  _______________________________________________________________________
-|[>] Win-Post-Install                    [-]|[]|[x]"|
+|[>] Win-Post-Install                    [-]|[]|[x]"|                   |
 |"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""|"|
-|PS C:\WINDOWS\system32> Set-Location -Path C:\Users\$env:USERNAME       | |
-|PS C:\Users\$env:USERNAME> .\WinPostInstall.ps1                | |
-|                                   |_|
+|PS C:\WINDOWS\system32> Set-Location -Path C:\Users\$env:USERNAME             | |
+|PS C:\Users\$env:USERNAME> .\WinPostInstall.ps1                               | |
+|                                                                     |_|
 |_____________________________________________________________________|/|
 "@
 
 	"Window_PS_Terminal_Old_Computer" = @"
- .---------.
- |.-------.|
- ||PS C:\>||
- ||    ||
- |"-------'|
-.-^---------^-.
-| ---~[WPI  |
-| franck]---~|
-"-------------'
+  .--------.
+  |.------.|
+  ||PS >  ||
+  ||      ||
+  |'------'|
+.-^--------^-.
+| ---~[WPI  ] |
+| [Franck]---~|
+'------------'
 "@
 
-	"Teddy_Screen" = @"
-           ,---.      ,---.
-          / /"'.\.--"""--./,'"\ \
-          \ \  _    _  / /
-           './ / __  __ \ \,'
-           /  /_O)_(_O\  \
-           | .-' ___ '-. |
-          .--|    \_/    |--.
-         ,'  \  \  |  /  /  '.
-        /    '. '--^--' ,'    \
-       .-"""""-.  '--.___.--'   .-"""""-.
-.-----------/     \------------------/     \--------------.
-| .---------\     /----------------- \     /------------. |
-| |     '-'--'--'          '--'--'-'       | |
-| |                               | |
-| |      __7__     %%%,%%%%%%%            | |
-| |      \_._/      ,'%% \\-*%%%%%%%         | |
-| |      ( ^ )   ;%%%%%*%  _%%%%            | |
-| |      '='|\.  ,%%%    \(_.*%%%%.         | |
-| |       / |  % *%%, ,%%%%*(  '          | |
-| |      (/  | %^   ,*%%% )\|,%%*%,_         | |
-| |      |__, |    *%  \/ #).-*%%*          | |
-| |       |  |      _.) ,/ *%,           | |
-| |       |  |  _________/)#(_____________       | |
-| |       /___| |__________________________|       | |
-| |       ===     [Win-Post-Install]         | |
-| |_____________________________________________________________| |
-|_________________________________________________________________|
-          )__________|__|__________(
-         |      ||      |
-         |____________||____________|
-          ),-----.(   ),-----.(
-         ,'  ==.  \  / .==  '.
-         /      ) (      \
-         '==========='  '===========' 
+"Monkey" = @"
+                  .="=.
+                _/.-.-.\_  _
+               ( ( o o ) ) ))
+   .-------.     |/ " \|  //
+   | -WPI- |     \'---'/  //
+  _| _GIT_ |_    /'"""'\ ((
+ =(_|_____|_)=  / /_,_\ \ \\
+  |:::::::::|   \_\\_'__/ \ ))
+  |:::::::[]|    /' /'~\ |//
+  |o=======.|   /  /  \ /
+  '"""""""""' ,--',--'\/\
+              '--'    '--'
 "@
 
-	"Monkey" = @"
-            .="=.
-           _/.-.-.\_   _
-           ( ( o o ) )  ))
-   .-------.    |/ " \|  //
-   | WPI |    \'---'/  //
-   _| GIT |_    /'"""'\\ ((
-  =(_|_______|_)=  / /_,_\ \\ \\
-   |:::::::::|   \_\\_'__/ \ ))
-   |:::::::[]|    /' /'~\ |//
-   |o=======.|   /  /  \ /
-   '"""""""""' ,--',--'\/\  /
-          '-- "--' '--'
-"@
-
-	"Windows_logo" = @"
- .----------------.
-|     _    |
-|   _.-'|'-._  |
-| .__.|  |  | |
-|   |_.-'|'-._| |
-| '--'|  |  | |
-| '--'|_.-'-'-._| |
-| '--'       |
- '----------------'
+  "Windows_logo" = @"
+    .----------------.
+   |          _       |
+   |      _.-'|'-._   |
+   | .__.|    |    |  |
+   |     |_.-'|'-._|  |
+   | '--'|    |    |  |
+   | '--'|_.-' '-._|  |
+WPI| '--'             |
+    '----------------'
 "@
 
 	"Windows_on_laptop" = @"
-  ._________________.
-  |.---------------.|
-  ||  -._ .-.   ||
-  ||  -._| | |  ||
-  ||  -._|"|"|  ||
-  ||  -._|.-.|  ||
-  ||_______________||
-  /.-.-.-.-.-.-.-.-.\
- /.-.-.-.-.-.-.-.-.-.\
+   ._________________.
+   |.---------------.|
+   ||   --._ .-.    ||
+   ||   --._| | |   ||
+   ||   --._|"|"|   ||
+   ||   --._|.-.|   ||
+   ||_______________||
+   /.-.-.-.-.-.-.-.-.\
+  /.-.-.-.-.-.-.-.-.-.\
  /.-.-.-.-.-.-.-.-.-.-.\
 /______/__________\___o_\
 \_______________________/
 "@
 
-	"Rocket_launch" = @"
-     *         *         *       *
-                           *       *
-            *      *               ___
- *        *                     |   | |
-    *       _________##         *    / \  | |
-           @\\\\\\\\\##  *   |       |--o|===|-|
- *         @@@\\\\\\\\##\    \|/|/      |---|  | |
-          @@ @@\\\\\\\\\\\  \|\\|//|/   *  /   \ | |
-       *   @@@@@@@\\\\\\\\\\\  \|\|/|/     | W-P-I | | |
-         @@@@@@@@@----------|  \\|//     | F-F  |=| |
-    __     @@ @@@ @@__________|   \|/      | G-G  | | |
- ____|_@|_    @@@@@@@@@__________|   \|/      |_______| |_|
-=|__ _____ |=   @@@@ .@@@__________|   |       |@| |@| | |
+  "Rocket_launch" = @"
+         *                 *                  *              *
+                                                      *             *
+                        *            *                             ___
+  *               *                                          |     | |
+        *              _________##                 *        / \    | |
+                      @\\\\\\\\\##    *     |              |--o|===|-|
+  *                  @@@\\\\\\\\##\       \|/|/            |---|   |g|
+                    @@ @@\\\\\\\\\\\    \|\\|//|/     *   /     \  |i|
+             *     @@@@@@@\\\\\\\\\\\    \|\|/|/         |  W    | |t|
+                  @@@@@@@@@----------|    \\|//          |  P    |=| |
+       __         @@ @@@ @@__________|     \|/           |  I    | | |
+  ____|_@|_       @@@@@@@@@__________|     \|/           |_______| |_|
+=|__ _____ |=     @@@@ .@@@__________|      |             |@| |@|  | |
 ____0_____0__\|/__@@@@__@@@__________|_\|/__|___\|/__\|/___________|_|_
 "@
 
-	"Space_odyssey" = @"
-                       _.--"""""--._
-                     ,-'       '-.
-        _            ,' --- - ----  --- '.
-       ,'|'.          ,'    ________________'.
-      O'.+,'O         /    /____(_______)___\ \
-  _......_  ,=.     __________;  _____ ____ _____ _____ :
- ,'  ,--.-',,;,:,;;;;;;;///////////|  ----- ---- ----- ----- |
-(  ( ==)=========================|   ,---.  ,---.  ,.  |
- '._ '--'-,''''''"""""""\\\\\\\\\\\:   /'. ,'\ /_  \ /\/\ ;
-  ''''''              \  : Y : :-'-. : : ): /
-                   '. \ | / \=====/ \/\/'
-                    '. '-'-'  '---'  ;'
-                     '-._      _,-'
-                       '--.....--'  ,--.
-                              ().0()
-                              ''-'
+    "Space_odyssey" = @"
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W           \                     ::                     /                   W
+W            \              ______________              /   W i n            W
+W             \       _____/ ____________ \_____       /    P o s t          W
+W              \   __/ _____/     ::     \_____ \__   /       I n s t a l l  W
+W               __/ __/           ::           \__ \__                       W
+W             _/ __/     ,--.     ::   ,----- _   \__ \_    -=[ franck ]=-   W
+W           _/ _/ \     (    )    ::  (_)    ( )   / \_ \_      (ferman)     W
+W         _/ _/    \    o)  (_    ::      ----'   /    \_ \_                 W
+W        / _/       \             ::             /       \_ \                W
+W       / /          \       ____________       /          \ \               W
+W      / / ._._._     \ ____/     ::     \____ /    .___,   \ \              W
+W     / /  | | | )    _/          ::          \_     | |     \ \             W
+W    / /   | | |/   _/  \         ::         /  \_  _|_|_     \ \            W
+W   | |        |  _/     \        ::        /     \_           | |           W
+W   | |          /        \       ::       /        \    _   _ | |           W
+W  / /   __     /          \   00000000   /          \    \ /   \ \          W
+W | | ._(  )_, |            000########000            |    X     | |         W
+W | |  ------  |          00##############00          |   (_)    | |         W
+W | |          |         0##################0         |          | |         W
+W:| |::::::::::|:::::::::0#####-( WPI )-####0:::::::::|::::::::::| |:::::::::W
+W | |          |         0##################0         | _   _    | |         W
+W | |    _,_,  |          00##############00          |  \ /     | |         W
+W  \ \  | | |   \          /000########000\          /    |     / /          W
+W   | | | | |/   \        /    00000000    \        /     |    | |           W
+W   | |           \_     /        ::   ..   \     _/    __________           W
+W    \ \       __,  \_  /         ::   \\_)  \  _/      \________/           W
+W     \ \      ,'|    \_          ::     \\_  _/         |-o o-||            W
+W      \ \   o'       / \____     ::     \  '-._          ) j ( |    _       W
+W       \ \ '        /       \__________/ '.    '-.__.----||=||  '--'/-,     W
+W        \ \_       /             ::        '.        \---|||||-----' /-.    W
+W         \_ \_    /      _____   ::     _    '._      ) .: O-:._,|._(   '.  W
+W           \_ \_ /      | _,-'   ::  \_/_\___/  '----/  ||   || '|' _\-,  ) W
+W             \_ \__      (__)    ::  \_/ \___/   ___|   ||   || _|3=.___,'  W
+W               \__ \__           ::           __/ __|   ||   || '-' |       W
+W              /   \__ \_____     ::     _____/ __/  |   ||   ||     |       W
+W             /       \_____ \__________/ _____/     |   ||   ||     |       W
+W            /              \____________/           |   ||   ||     |       W
+W           /                     ::                 |   ||   ||     |       W
+W          /                      ::                 |   ||   ||     |       W
+W         /                       ::                 |   ||   ||     |       W
+W        /                        ::                 |   ||   ||     |       W
+W       /                         ::                 |   ||   ||     |       W
+W      /                          ::                 |   ||   ||     |       W
+W     /                       _____________________________   ||     |       W
+W    / _______,--------------'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'--------------.__W
+W  ,--'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%W
+W.'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%W
+W%%%%%[ franckferman/Win-PostInstall ]%%%%%%%%%%%%%%%%%%%%%%W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 "@
 
-	"Galaxy" = @"
-  .    .    .    .    .    .    .    .    .
-   .     .     .    _......____._    .     .
-  .     .     . ..--'"" .      """"""---...     .
-          _...--""    ................    '-.       .
-        .-'    ...:'::::;:::%:.::::::_;;:...   '-.
-       .-'    ..::::'''''  _...---'"""":::+;_::.   '.   .
- .    .' .  ..::::'   _.-""        :::)::.    '.
-     .   ..;:::'   _.-'     .       f::'::  o _
-    /   .:::%' . .-"            .-. ::;;:.  /" "x
- .  .' ""::.::'  .-"   _.--'"""-.      (  ) ::.:: |_.-' |
-   .'  ::;:'  .'   .-" .d@@b.  \  .  . '-'  ::%::  \_ _/  .
-  .'  :,::'  /  . _'  8@@@@8  j   .-'    :::::   " o
-  | . :.%:' . j   (_)  '@@@P' .'  .-"     ::.::  . f
-  |  ::::   (    -..____...-' .-"     .::::'    /
-.  |  ':'::  '.        ..--'    . .::'::  .  /
-  j   ':::::  '-._____...---""       .::%:::'    .' .
-   \   ::.:%..       .    .  ...:,::::'    .'
- .  \    ':::':..        ....::::.::::'    .-'     .
-    \  .  '':::%::'::.......:::::%::.::::''    .-'
-   . '.    . ''::::::%::::.::;;:::::'''   _.-'     .
- .    '-..   .  .  '''''''''     . _.-'   .     .
-     .  ""--...____  .  ______......--' .     .     .
- .    .    .  """"""""   .    .    .    .    .
+  "Galaxy" = @"
+ .      .      .      .      .      .      .      .      .      .      .
+.                               .       .       .       .       .       .
+   .        .        .        .        .        .        .        .        .
+     .         .         .        _......____._        .         .
+   .          .          . ..--'"" .           """"""---...          .
+                   _...--""        ................       '-.              .
+                .-'        ...:'::::;:::%:.::::::_;;:...     '-.
+             .-'       ..::::'''''   _...---'"""":::+;_::.      '.      .
+  .        .' .    ..::::'      _.-""               :::)::.       '.
+         .      ..;:::'     _.-'         .             f::'::    o  '_
+        /     .:::%'  .  .-"                        .-.  ::;;:.     '  
+  .   .'  ""::.::'    .-"     _.--'"""-.           (   )  ::.::     '  
+     .'    ::;:'    .'     .-" .d@@b.   \    .    . '-'   ::%::     '      .
+    .'    :,::'    /   .  ('   8@@@@8   j      .-'       :::::      " o
+    | .  :.%:' .  |       (    '@@@P'  .'   .-"         ::.::    .  '
+    |    ::::     (        -..____...-'  .-"          .::::'       /
+.   |    ':'::    '.                ..--'        .  .::'::   .    /
+    j     ':::::    '-._____...---""             .::%:::'       .'  .
+     \      ::.:%..             .       .    ...:,::::'       .'
+ .    \       ':::':..                ....::::.::::'       .-'          .
+       \    .   '':::%::'::.......:::::%::.::::''       .-'
+      . '.        . ''::::::%::::.::;;:::::'''      _.-'          .
+  .       '-..     .    .   '''''''''         . _.-'     .          .
+         .    ""--...____    .   ______......--' .         .         .
+  .        .        .    """"""""     .        .        .        .        .
+ .       .       .       .       .       .       .       .       .
+     .      .      .      .      .      .      .      .      .      .      .
 "@
 
-		}
+    }
 
   $BannerGroups = @{
     "Window_Banners"  = @("Window_PS_Terminal", "Window_PS_Terminal_Old_Computer")
@@ -247,861 +276,1228 @@ ____0_____0__\|/__@@@@__@@@__________|_\|/__|___\|/__\|/___________|_|_
 
 
 function Show-Banner {
-  <#
-  .SYNOPSIS
-  Displays a selected or random banner with customizable color.
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false, HelpMessage = "Banner name or banner group (e.g. 'Window_Banners').")]
+        [string]$BannerType,
 
-  .PARAMETER BannerType
-  Optional. Specifies which banner to show. If not set, a random one is picked.
+        [Parameter(Mandatory = $false, HelpMessage = "Foreground color for the banner.")]
+        [ValidateSet("Black", "DarkBlue", "DarkGreen", "DarkCyan", "DarkRed", "DarkMagenta", "DarkYellow", "Gray", "DarkGray", "Blue", "Green", "Cyan", "Red", "Magenta", "Yellow", "White")]
+        [string]$ForegroundColor = "Cyan"
+    )
 
-  .PARAMETER ForegroundColor
-  Optional. The color used for displaying the banner. Defaults to Cyan.
+    <#
+    .SYNOPSIS
+    Displays an ASCII banner by name or group, with customizable color.
 
-  .EXAMPLE
-  Show-Banner -BannerType "Monkey" -ForegroundColor Magenta
-  #>
+    .DESCRIPTION
+    Retrieves and prints an ASCII banner to the console. The banner can be selected by name or from a group (e.g., "Window_Banners").
+    If no name is provided, a random banner is displayed.
+    Color customization is supported through the ForegroundColor parameter.
 
-  param (
-    [string]$BannerType = $(Get-Random -InputObject @(
-      "Window_PS_Terminal",
-      "Window_PS_Terminal_Old_Computer",
-      "Teddy_Screen",
-      "Monkey",
-      "Windows_logo",
-      "Windows_on_laptop",
-      "Rocket_launch",
-      "Space_odyssey",
-      "Galaxy"
-    )),
-    [ValidateSet("Black", "DarkBlue", "DarkGreen", "DarkCyan", "DarkRed", "DarkMagenta", "DarkYellow", "Gray", "DarkGray", "Blue", "Green", "Cyan", "Red", "Magenta", "Yellow", "White")]
-    [string]$ForegroundColor = "Cyan"
-  )
+    .PARAMETER BannerType
+    The name of the banner or banner group to display. If omitted, a random one is selected.
 
-  Get-Banner -BannerType $BannerType | Write-Host -ForegroundColor $ForegroundColor
+    .PARAMETER ForegroundColor
+    The color used to render the banner. Defaults to Cyan. Accepts any standard console color.
+
+    .OUTPUTS
+    [string] — The ASCII banner rendered to the console.
+
+    .EXAMPLE
+    Show-Banner -BannerType "Monkey" -ForegroundColor Magenta
+
+    .EXAMPLE
+    Show-Banner -BannerType "Space_Banners"
+
+    .EXAMPLE
+    Show-Banner
+    Displays a random banner in Cyan.
+    #>
+
+    if (-not $BannerType) {
+        $allBannerKeys = @(
+            "Window_PS_Terminal",
+            "Window_PS_Terminal_Old_Computer",
+            "Teddy_Screen",
+            "Monkey",
+            "Windows_logo",
+            "Windows_on_laptop",
+            "Rocket_launch",
+            "Space_odyssey",
+            "Galaxy"
+        )
+        $BannerType = Get-Random -InputObject $allBannerKeys
+    }
+
+    $banner = Get-Banner -BannerType $BannerType
+
+    if ($null -ne $banner) {
+        Write-Host $banner -ForegroundColor $ForegroundColor
+    }
+    else {
+        Write-Warning "❌ Banner '$BannerType' not found."
+    }
 }
 
 
-<#
-.SYNOPSIS
-Retrieves basic system information.
-
-.DESCRIPTION
-Returns a custom object containing:
-- The current timestamp
-- The system's hostname
-- The domain name (or WORKGROUP if not joined)
-
-.OUTPUTS
-[PSCustomObject] with Timestamp, Hostname, and Domain properties.
-#>
 function Get-SystemInfoData {
-  $sysInfo = Get-CimInstance -ClassName Win32_ComputerSystem
+    [CmdletBinding()]
+    param()
 
-  return [PSCustomObject]@{
-    Timestamp = Get-Date -Format "M/d/yyyy h:mm:ss tt"
-    Hostname = $env:COMPUTERNAME
-    Domain  = if ($sysInfo.PartOfDomain) { $sysInfo.Domain } else { "WORKGROUP" }
-  }
+    <#
+    .SYNOPSIS
+    Retrieves basic system identity information.
+
+    .DESCRIPTION
+    Returns a structured object containing:
+    - The current timestamp (localized)
+    - The system's hostname
+    - The domain name (or 'WORKGROUP' if not domain-joined)
+
+    .OUTPUTS
+    [PSCustomObject] with the following properties:
+    - Timestamp [string]
+    - Hostname  [string]
+    - Domain    [string]
+
+    .EXAMPLE
+    Get-SystemInfoData
+    #>
+
+    $sysInfo = Get-CimInstance -ClassName Win32_ComputerSystem
+
+    return [PSCustomObject]@{
+        Timestamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+        Hostname  = $env:COMPUTERNAME
+        Domain    = if ($sysInfo.PartOfDomain) { $sysInfo.Domain } else { 'WORKGROUP' }
+    }
 }
 
 
 function Pause-ForUser {
-  <#
-  .SYNOPSIS
-  Pauses script execution until the user presses Enter.
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [string]$Message = "Press Enter to continue...",
 
-  .DESCRIPTION
-  Displays a custom or default message prompting the user to press Enter to continue.
+        [Parameter(Mandatory = $false)]
+        [bool]$IncludeFun = $true,
 
-  .PARAMETER Message
-  The message to display before waiting for user input. Defaults to "Press Enter to continue...".
+        [Parameter(Mandatory = $false)]
+        [switch]$Quiet
+    )
 
-  .EXAMPLE
-  Pause-ForUser
-  Pauses with the default message.
+    <#
+    .SYNOPSIS
+    Pauses script execution until the user presses Enter.
 
-  .EXAMPLE
-  Pause-ForUser -Message "Ready for the next step? Hit Enter."
-  #>
+    .DESCRIPTION
+    Displays a prompt message and optionally a humorous security-related message before waiting for user confirmation.
 
-  param (
-    [string]$Message = "Press Enter to continue..."
-  )
+    .PARAMETER Message
+    The message shown before pausing. Defaults to: "Press Enter to continue...".
 
-  Read-Host $Message
+    .PARAMETER IncludeFun
+    If set, displays a fun or sarcastic message chosen randomly from a curated set. Enabled by default.
+
+    .PARAMETER Quiet
+    If set, suppresses all output. The script will still wait, but display nothing.
+
+    .EXAMPLE
+    Pause-ForUser
+    Pauses with default prompt and random fun message.
+
+    .EXAMPLE
+    Pause-ForUser -Message "Ready for phase 2?" -IncludeFun:$false
+
+    .EXAMPLE
+    Pause-ForUser -Quiet
+    #>
+
+    if (-not $Quiet) {
+        if ($IncludeFun) {
+            $messages = @(
+                "[🧠] Think before you continue, $env:USERNAME.",
+                "[🧠] Think before you continue, $env:USERNAME.",
+                "[🧠] Think before you continue, $env:USERNAME.",
+
+                "[💤] Waiting... like Windows Update before it crashes.",
+                "[💤] Waiting... like Windows Update before it crashes.",
+
+                "[🚀] Hang tight, astronaut. We’re almost there."
+            )
+
+            # $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            # Write-Host "`n[👽] $timestamp — Confirm transmission before proceeding..." -ForegroundColor Green
+            Write-Host ($messages | Get-Random) -ForegroundColor DarkYellow
+        }
+
+        Write-Host "`n$Message" -ForegroundColor Gray
+    }
+
+    [void][System.Console]::ReadLine()
 }
 
 
 function ScriptExit {
-  <#
-  .SYNOPSIS
-  Terminates the script execution with a given exit code.
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [int]$ExitCode = 0,
 
-  .DESCRIPTION
-  Provides a unified and clean exit point for scripts. Displays a custom or default message
-  unless the -NoExitMessage flag is specified.
+        [Parameter(Position = 1)]
+        [string]$ExitMessage,
 
-  .PARAMETER ExitCode
-  The exit code to terminate with. Default is 0 (success).
+        [Parameter()]
+        [switch]$NoExitMessage
+    )
 
-  .PARAMETER ExitMessage
-  Optional custom message to display before exiting. If not specified, a default message is shown.
+    <#
+    .SYNOPSIS
+    Terminates the script execution with a specified exit code.
 
-  .PARAMETER NoExitMessage
-  If specified, suppresses all exit messages.
+    .DESCRIPTION
+    Provides a centralized and clean exit mechanism. Outputs a message (custom or default) unless -NoExitMessage is used.
 
-  .EXAMPLE
-  ScriptExit -ExitCode 1 -ExitMessage "Fatal error during execution."
+    .PARAMETER ExitCode
+    Exit code to return. Default is 0 (success).
 
-  .EXAMPLE
-  ScriptExit # Exits with code 0 and default message.
+    .PARAMETER ExitMessage
+    Optional. Message to display before exiting. If omitted, a generic message is shown.
 
-  .EXAMPLE
-  ScriptExit -ExitCode 2 -NoExitMessage # Exits silently with code 2.
-  #>
+    .PARAMETER NoExitMessage
+    If set, suppresses any output before termination.
 
-  [CmdletBinding()]
-  param (
-    [Parameter(Position = 0)]
-    [int]$ExitCode = 0,
+    .EXAMPLE
+    ScriptExit -ExitCode 1 -ExitMessage "Fatal error during execution."
 
-    [Parameter(Position = 1)]
-    [string]$ExitMessage,
+    .EXAMPLE
+    ScriptExit
+    Exits with code 0 and default message.
 
-    [switch]$NoExitMessage
-  )
+    .EXAMPLE
+    ScriptExit -ExitCode 2 -NoExitMessage
+    Exits silently with code 2.
+    #>
 
-  if (-not $NoExitMessage) {
-    if (-not $ExitMessage) {
-      $ExitMessage = "Exiting script with exit code $ExitCode"
+    if (-not $NoExitMessage) {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+        if (-not $ExitMessage) {
+            $ExitMessage = "Script terminated with exit code $ExitCode."
+        }
+
+        $prefix = "[👽] $timestamp —"
+
+        if ($ExitCode -eq 0) {
+            Write-Host "$prefix $ExitMessage" -ForegroundColor Green
+        } else {
+            Write-Host "$prefix $ExitMessage" -ForegroundColor Red
+        }
     }
 
-    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-
-    if ($ExitCode -eq 0) {
-      Write-Host "$ts - $ExitMessage" -ForegroundColor Green
-    } else {
-      Write-Host "$ts - $ExitMessage" -ForegroundColor Red
-    }
-  }
-
-  exit $ExitCode
+    exit $ExitCode
 }
 
 
 function Display-Help {
-  [CmdletBinding()]
-  <#
-  .SYNOPSIS
-  Displays the help menu for WinPostInstall.
+    [CmdletBinding()]
+    param()
 
-  .DESCRIPTION
-  This function prints a detailed help guide for the WinPostInstall PowerShell script, outlining its features, usage, and parameters.
+    <#
+    .SYNOPSIS
+    Displays the help menu for WinPostInstall.
 
-  .EXAMPLE
-  PS > .\WinPostInstall.ps1 -Help
+    .DESCRIPTION
+    Prints a detailed guide covering features, usage, and parameters of the WinPostInstall script.  
+    Ideal for users who want an overview of capabilities, prerequisites, and usage examples.
 
-  .LINK
-  https://github.com/franckferman/WinPostInstall
-  #>
-  param()
+    .EXAMPLE
+    PS > .\WinPostInstall.ps1 -Help
 
-  $helpText = @"
-=======================================================
-        WinPostInstall - Help Menu
-=======================================================
+    .LINK
+    https://github.com/franckferman/WinPostInstall
+    #>
+
+    # $helpText = Get-Content .\Help.txt -Encoding UTF8
+    $helpText = @"
+┌──────────────────────────────────────────────────────────────┐
+│                  🛸 WinPostInstall – Help Menu               │
+└──────────────────────────────────────────────────────────────┘
 
 DESCRIPTION:
-WinPostInstall is a modular and automated post-installation script 
-for customizing, configuring, and hardening Windows systems.
+  WinPostInstall automates the configuration, customization, 
+  and hardening of Windows systems post-installation.
 
-It is ideal for developers, cybersecurity professionals, and power users 
-who want to streamline the setup of a clean Windows environment.
+  WinPostInstall is a modular and idempotent PowerShell script crafted to transform a freshly installed Windows system 
+  into a hardened, decluttered, and operational environment.
 
-FEATURES:
- - Debloat Windows and disable telemetry
- - Harden the system using modern practices
- - Install tools and apps via WinGet & Microsoft Store
- - Configure developer environment (WSL, terminals, etc.)
- - Apply themes, privacy tweaks, and optimizations
+  It encapsulates system configuration, privacy and telemetry reduction, curated software provisioning (via Winget, Microsoft Store, or local binaries), 
+  security enhancements (Defender, WDAC, services, firewall), interface theming, and the removal of superfluous components.
+
+  Tailored for developers, system administrators, and security professionals, it offers precision, consistency, and autonomy — all in a single pass.
 
 USAGE:
-Simply run the script in an elevated PowerShell session:
+  Open an elevated PowerShell (<=5.1) prompt and run:
 
-Example:
--------------------------------------------------------
-PS > Set-ExecutionPolicy Bypass -Scope Process
-PS > .\WinPostInstall.ps1
--------------------------------------------------------
+    PS> Set-ExecutionPolicy Bypass -Scope Process
+    PS> .\WinPostInstall.ps1
 
 PARAMETERS:
- -Help    Display this help menu.
+  -Help           Show this help screen.
+  -AfterRestart   Continue the setup after reboot (post-stage).
+  -Debug          Enable verbose output for troubleshooting.
 
 REQUIREMENTS:
- - PowerShell 5.1 or later
- - Administrator privileges
- - Internet access for downloading tools and packages
+  - PowerShell 5.1 or later
+  - Admin rights
+  - Internet access for package installation
 
 CREDITS:
- - HardeningKitty   (https://github.com/scipag/HardeningKitty)
- - Win11Debloat    (https://github.com/Raphire/Win11Debloat)
+  - HardeningKitty  – https://github.com/scipag/HardeningKitty
+  - Win11Debloat    – https://github.com/Raphire/Win11Debloat
+  - Harden-Windows-Security – https://github.com/HotCakeX/Harden-Windows-Security
 
-SOURCE & UPDATES:
- GitHub Repository: https://github.com/franckferman/WinPostInstall
+SOURCE:
+  https://github.com/franckferman/WinPostInstall
 
 AUTHOR:
- Franck FERMAN
- contact@franckferman.fr
+  Franck FERMAN – contact@franckferman.fr
 
-=======================================================
+──────────────────────────────────────────────────────────────
 "@
 
-  Write-Host ''
-  Write-Host $helpText -ForegroundColor Cyan
-  Write-Host ''
-  ScriptExit
+    Write-Host ''
+    Write-Host $helpText -ForegroundColor Cyan
+    Write-Host ''
+    ScriptExit -NoExitMessage
 }
 
 
 function Test-AdminRights {
-  [CmdletBinding()]
-  [OutputType([Bool])]
-  param()
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
 
-  <#
-  .SYNOPSIS
-  Tests if the current user has administrator rights.
+    <#
+    .SYNOPSIS
+    Checks whether the current user has administrative privileges.
 
-  .DESCRIPTION
-  This function will determine if the current user is part of the Administrator role. It utilizes the .NET classes for Windows Security and Principal Windows Built-in Roles to make this determination.
+    .DESCRIPTION
+    Determines if the current session is elevated by evaluating whether the current user
+    belongs to the local Administrators group using .NET security principals.
 
-  .EXAMPLE
-  if (Test-AdminRights) {
-    Write-Host "You are running as an administrator."
-  } else {
-    Write-Host "You are not running as an administrator."
-  }
-  #>
+    .OUTPUTS
+    [bool] — $true if the user has admin rights; otherwise, $false.
 
-  $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-  $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
-  $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+    .EXAMPLE
+    if (Test-AdminRights) {
+        Write-Host "You are running as an administrator."
+    } else {
+        Write-Host "You are not running as an administrator."
+    }
+    #>
 
-  return $principal.IsInRole($adminRole)
+    $identity  = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
+    $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+
+    return $principal.IsInRole($adminRole)
 }
 
 
 function Get-WANStatus {
-  <#
-  .SYNOPSIS
-  Tests the WAN connection by trying to reach one of the provided URLs.
+    [CmdletBinding()]
+    [OutputType([string])]
+    param (
+        [Parameter(Mandatory = $false, HelpMessage = "List of URLs to test. One will be selected at random.")]
+        [System.Uri[]]$urls = @(
+            'https://httpbin.org/get',
+            'https://httpstat.us/200',
+            'https://1.1.1.1'
+        )
+    )
 
-  .DESCRIPTION
-  This function randomly selects one of the provided URLs (or default URLs if none are provided) and attempts to reach it.
-  If successful, it returns "Online". Otherwise, it returns "Offline" or provides an error message.
+    <#
+    .SYNOPSIS
+    Tests external WAN connectivity by querying a random URL.
 
-  .PARAMETER urls
-  An array of URLs to be tested. If none are provided, default URLs are used.
+    .DESCRIPTION
+    Selects a random URL from the provided list (or defaults) and sends an HTTP GET request.
+    If a valid response is received (HTTP 200), returns "Online". Otherwise, returns "Offline"
+    with error or status details.
 
-  .EXAMPLE
-  Get-WANStatus -urls 'https://httpbin.org/get'
-  #>
+    .PARAMETER urls
+    Optional. An array of URLs to test connectivity. Defaults to known HTTP test endpoints.
 
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory=$false)]
-    [System.Uri[]]$urls = @('https://httpbin.org/get', 'https://httpstat.us/200')
-  )
+    .OUTPUTS
+    [string] — Returns "Online", or "Offline - <reason>".
 
-  [String]$selectedUrl = Get-Random -InputObject $urls -Count 1
-  $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    .EXAMPLE
+    Get-WANStatus -urls 'https://httpbin.org/get'
 
-  try {
+    .EXAMPLE
+    Get-WANStatus
+    #>
+
+    $selectedUrl = Get-Random -InputObject $urls
     $ProgressPreference = 'SilentlyContinue'
-    $response = Invoke-WebRequest -Uri $selectedUrl -WebSession $webSession -Headers @{
-      'User-Agent' = 'WinPostInstall/1.0.0'
-    } -UseBasicParsing -TimeoutSec 5
 
-    if ([Byte]$response.StatusCode -eq 200) {
-      return "Online"
-    } else {
-      return "Offline - Received status code $($response.StatusCode)"
+    try {
+        $response = Invoke-WebRequest -Uri $selectedUrl -UseBasicParsing -TimeoutSec 5 -Headers @{
+            'User-Agent' = 'WinPostInstall/1.0.0'
+        }
+
+        if ($response.StatusCode -eq 200) {
+            return "Online"
+        } else {
+            return "Offline – Received status code $($response.StatusCode)"
+        }
+
+    } catch {
+        return "Offline – Error: $($_.Exception.Message)"
     }
-
-  } catch {
-    return "Offline - Error: $($_.Exception.Message)"
-  }
-
 }
 
 
-<#
-.SYNOPSIS
-Retrieves the firewall "Enabled" status for the specified profiles.
-
-.DESCRIPTION
-Returns a list of objects showing whether the Windows Firewall is enabled
-for each specified profile: Domain, Private, or Public.
-
-.PARAMETER Profiles
-An array of profile names to check. Valid values: Domain, Private, Public.
-Defaults to all three.
-
-.OUTPUTS
-[PSCustomObject[]] with properties:
-- Profile [string]
-- Enabled [bool]
-#>
 function Get-FirewallEnabledStatus {
-  param(
-    [string[]]$Profiles = @("Domain", "Private", "Public")
-  )
+    [CmdletBinding()]
+    [OutputType([PSCustomObject[]])]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Domain", "Private", "Public")]
+        [string[]]$Profiles = @("Domain", "Private", "Public")
+    )
 
-  $result = @()
-  foreach ($profile in $Profiles) {
-    $status = (Get-NetFirewallProfile -Profile $profile).Enabled
-    $result += [PSCustomObject]@{
-      Profile = $profile
-      Enabled = $status
+    <#
+    .SYNOPSIS
+    Retrieves the Windows Firewall "Enabled" status for specified profiles.
+
+    .DESCRIPTION
+    Returns an array of structured objects indicating whether Windows Defender Firewall is enabled
+    for each of the selected profiles: Domain, Private, or Public.
+
+    .PARAMETER Profiles
+    Optional. One or more profile names to check. Valid values: Domain, Private, Public.
+    Defaults to all three profiles.
+
+    .OUTPUTS
+    [PSCustomObject[]] — Each object contains:
+    - Profile [string]
+    - Enabled [bool]
+
+    .EXAMPLE
+    Get-FirewallEnabledStatus
+
+    .EXAMPLE
+    Get-FirewallEnabledStatus -Profiles "Private", "Public"
+    #>
+
+    foreach ($profile in $Profiles) {
+        $fw = Get-NetFirewallProfile -Profile $profile
+        [PSCustomObject]@{
+            Profile = $profile
+            Enabled = [bool]$fw.Enabled
+        }
     }
-  }
-  return $result
 }
 
 
-<#
-.SYNOPSIS
-Retrieves the full firewall configuration state for the specified profiles.
-
-.DESCRIPTION
-Returns a list of custom objects with detailed firewall settings for each
-profile, including enabled status, inbound/outbound actions, and rules.
-
-.PARAMETER Profiles
-An array of Windows Firewall profiles to query. Default: Domain, Private, Public.
-
-.OUTPUTS
-[PSCustomObject[]] with properties:
-- Profile         [string]
-- Enabled         [bool]
-- DefaultInboundAction  [string]
-- DefaultOutboundAction  [string]
-- AllowInboundRules    [bool]
-- AllowLocalFirewallRules [bool]
-#>
 function Get-FirewallProfileState {
-  param(
-    [string[]]$Profiles = @("Domain", "Private", "Public")
-  )
+    [CmdletBinding()]
+    [OutputType([PSCustomObject[]])]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Domain", "Private", "Public")]
+        [string[]]$Profiles = @("Domain", "Private", "Public")
+    )
 
-  $result = @()
-  foreach ($profile in $Profiles) {
-    $fw = Get-NetFirewallProfile -Profile $profile
-    $result += [PSCustomObject]@{
-      Profile         = $profile
-      Enabled         = $fw.Enabled
-      DefaultInboundAction  = $fw.DefaultInboundAction
-      DefaultOutboundAction  = $fw.DefaultOutboundAction
-      AllowInboundRules    = $fw.AllowInboundRules
-      AllowLocalFirewallRules = $fw.AllowLocalFirewallRules
+    <#
+    .SYNOPSIS
+    Retrieves the full Windows Firewall configuration state for specified profiles.
+
+    .DESCRIPTION
+    Returns an array of structured objects for each specified Windows Firewall profile.
+    Each object includes the enabled state, default inbound/outbound actions, and whether inbound/local rules are allowed.
+
+    .PARAMETER Profiles
+    Optional. List of profiles to query. Valid values: Domain, Private, Public.
+    Defaults to all three.
+
+    .OUTPUTS
+    [PSCustomObject[]] — Each object includes:
+    - Profile                  [string]
+    - Enabled                  [bool]
+    - DefaultInboundAction     [string]
+    - DefaultOutboundAction    [string]
+    - AllowInboundRules        [bool]
+    - AllowLocalFirewallRules  [bool]
+
+    .EXAMPLE
+    Get-FirewallProfileState
+
+    .EXAMPLE
+    Get-FirewallProfileState -Profiles "Private", "Public"
+    #>
+
+    foreach ($profile in $Profiles) {
+        $fw = Get-NetFirewallProfile -Profile $profile
+        [PSCustomObject]@{
+            Profile                 = $profile
+            Enabled                 = [bool]$fw.Enabled
+            DefaultInboundAction    = $fw.DefaultInboundAction
+            DefaultOutboundAction   = $fw.DefaultOutboundAction
+            AllowInboundRules       = [bool]$fw.AllowInboundRules
+            AllowLocalFirewallRules = [bool]$fw.AllowLocalFirewallRules
+        }
     }
-  }
-  return $result
 }
 
 
-<#
-.SYNOPSIS
-Applies firewall hardening settings to the specified profiles.
-
-.DESCRIPTION
-Ensures that each profile has:
-- The firewall enabled
-- DefaultInboundAction set to Block
-- DefaultOutboundAction set to Allow
-- All inbound rules (including local ones) blocked
-
-This function performs silent remediation without console output.
-It is meant to be called from higher-level functions that handle display or logging.
-
-.PARAMETER Profiles
-The array of firewall profiles to harden. Default: Domain, Private, Public.
-
-.INPUTS
-[string[]]
-
-.OUTPUTS
-None (silent operation)
-#>
 function Apply-FirewallHardening {
-  param(
-    [string[]]$Profiles = @("Domain", "Private", "Public")
-  )
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(ValueFromPipeline = $true)]
+        [ValidateSet("Domain", "Private", "Public")]
+        [string[]]$Profiles = @("Domain", "Private", "Public")
+    )
 
-  foreach ($profile in $Profiles) {
-    $fw = Get-NetFirewallProfile -Profile $profile
+    <#
+    .SYNOPSIS
+    Applies firewall hardening settings to the specified profiles.
 
-    if ($fw.Enabled -ne "True") {
-      Set-NetFirewallProfile -Profile $profile -Enabled "True"
+    .DESCRIPTION
+    Silently enforces strict Windows Firewall configurations per profile.
+
+    Each targeted profile will be configured as follows:
+    - Firewall enabled
+    - DefaultInboundAction: Block
+    - DefaultOutboundAction: Allow
+    - Inbound rules (global & local): blocked
+
+    This function performs silent remediation and is designed to be invoked
+    by higher-level functions that handle display, logging, or user feedback.
+
+    .PARAMETER Profiles
+    Optional. List of firewall profiles to harden. Valid values: Domain, Private, Public.
+    Defaults to all three.
+
+    .INPUTS
+    [string[]] — Accepts profile names via pipeline or parameter.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    Apply-FirewallHardening
+
+    .EXAMPLE
+    Apply-FirewallHardening -Profiles "Private", "Public"
+    #>
+
+    foreach ($profile in $Profiles) {
+        $fw = Get-NetFirewallProfile -Profile $profile
+
+        if (-not $fw.Enabled) {
+            Set-NetFirewallProfile -Profile $profile -Enabled True
+        }
+
+        if ($fw.DefaultInboundAction -ne "Block") {
+            Set-NetFirewallProfile -Profile $profile -DefaultInboundAction Block
+        }
+
+        if ($fw.DefaultOutboundAction -ne "Allow") {
+            Set-NetFirewallProfile -Profile $profile -DefaultOutboundAction Allow
+        }
+
+        if ($fw.AllowInboundRules -or $fw.AllowLocalFirewallRules) {
+            Set-NetFirewallProfile -Profile $profile `
+                -AllowInboundRules $false `
+                -AllowLocalFirewallRules $false
+        }
     }
-    if ($fw.DefaultInboundAction -ne "Block") {
-      Set-NetFirewallProfile -Profile $profile -DefaultInboundAction Block
-    }
-    if ($fw.DefaultOutboundAction -ne "Allow") {
-      Set-NetFirewallProfile -Profile $profile -DefaultOutboundAction Allow
-    }
-    if ($fw.AllowInboundRules -ne $false -or $fw.AllowLocalFirewallRules -ne $false) {
-      Set-NetFirewallProfile -Profile $profile `
-        -AllowInboundRules "False" `
-        -AllowLocalFirewallRules "False"
-    }
-  }
 }
 
 
-<#
-.SYNOPSIS
-Displays the state of each Windows Firewall profile in a formatted table.
-
-.PARAMETER State
-The state object returned by Get-FirewallProfileState.
-
-.OUTPUTS
-None. Writes formatted output to the console.
-#>
 function Show-FirewallProfileState {
-  param(
-    [Parameter(Mandatory=$true)]
-    $State
-  )
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $State
+    )
 
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
-  Write-Host "[👽] $ts - Current Firewall Profile Status" -ForegroundColor Cyan
-  $State | Format-Table Profile, Enabled, DefaultInboundAction, DefaultOutboundAction, AllowInboundRules, AllowLocalFirewallRules -AutoSize
+    <#
+    .SYNOPSIS
+    Displays the state of each Windows Firewall profile in a formatted table.
+
+    .DESCRIPTION
+    Takes an array of objects (as returned by Get-FirewallProfileState) and displays a
+    timestamped, color-coded table summarizing the status of each firewall profile.
+
+    .PARAMETER State
+    The state object returned by Get-FirewallProfileState. Must contain the properties:
+    Profile, Enabled, DefaultInboundAction, DefaultOutboundAction, AllowInboundRules, AllowLocalFirewallRules.
+
+    .OUTPUTS
+    None. Writes styled output to the console.
+
+    .EXAMPLE
+    $state = Get-FirewallProfileState
+    Show-FirewallProfileState -State $state
+    #>
+
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "`n[👽] $ts - Current Windows Firewall Profile Status" -ForegroundColor Cyan
+    $State | Format-Table Profile, Enabled, DefaultInboundAction, DefaultOutboundAction, AllowInboundRules, AllowLocalFirewallRules -AutoSize
 }
 
 
-<#
-.SYNOPSIS
-Executes the full firewall hardening process.
-
-.DESCRIPTION
-Audits the current firewall state, applies hardening,
-and then displays the final result.
-This function performs no direct console output by itself —
-it delegates all display to Show-* functions.
-#>
 function Harden-AllFirewallProfiles {
-  $profiles = @("Domain", "Private", "Public")
-  $initialState = Get-FirewallProfileState -Profiles $profiles
-  $finalState = $null
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param()
 
-  Apply-FirewallHardening -Profiles $profiles
+    <#
+    .SYNOPSIS
+    Executes a full firewall hardening workflow across all standard profiles.
 
-  $finalState = Get-FirewallProfileState -Profiles $profiles
+    .DESCRIPTION
+    This function:
+    1. Retrieves the current firewall configuration for Domain, Private, and Public profiles.
+    2. Applies strict hardening rules to each profile.
+    3. Retrieves the updated state after hardening.
 
-  return [PSCustomObject]@{
-    Initial = $initialState
-    Final  = $finalState
-  }
+    Returns a structured object containing the initial and final states.
+
+    All console output should be handled externally by display functions such as Show-FirewallProfileState.
+
+    .OUTPUTS
+    [PSCustomObject] — Contains:
+    - Initial [PSCustomObject[]] : Pre-hardening state
+    - Final   [PSCustomObject[]] : Post-hardening state
+
+    .EXAMPLE
+    $result = Harden-AllFirewallProfiles
+    Show-FirewallProfileState -State $result.Final
+    #>
+
+    $profiles     = @("Domain", "Private", "Public")
+    $initialState = Get-FirewallProfileState -Profiles $profiles
+
+    Apply-FirewallHardening -Profiles $profiles
+
+    $finalState = Get-FirewallProfileState -Profiles $profiles
+
+    return [PSCustomObject]@{
+        Initial = $initialState
+        Final   = $finalState
+    }
 }
 
 
-<#
-.SYNOPSIS
-Runs the full firewall hardening routine with output and user experience.
-
-.DESCRIPTION
-Displays header, system info, runs hardening, and shows before/after state.
-This function manages the full UX.
-#>
 function Invoke-FirewallHardening {
-  Write-Host "[👽] Auditing Firewall Profiles..." -ForegroundColor Cyan
-  $results = Harden-AllFirewallProfiles
+    [CmdletBinding()]
+    param()
 
-  Write-Host ""
-  Show-FirewallProfileState -State $results.Initial
+    <#
+    .SYNOPSIS
+    Runs the full Windows Firewall hardening routine with interactive output.
 
-  Write-Host "[👽] Final Firewall Status:" -ForegroundColor Cyan
-  Write-Host ""
-  Show-FirewallProfileState -State $results.Final
+    .DESCRIPTION
+    Orchestrates the complete hardening flow:
+    - Displays initial status
+    - Applies hardened firewall configuration
+    - Shows final state
 
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
-  Write-Host "[👽] $ts - Hardening completed." -ForegroundColor Cyan
+    This function handles all user-facing output and timestamps,
+    and is designed as the UX entry point for firewall security.
+
+    .OUTPUTS
+    None. Writes styled output to the console.
+
+    .EXAMPLE
+    Invoke-FirewallHardening
+    #>
+
+    $tsStart = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[👽] $tsStart - Auditing current Windows Firewall state..." -ForegroundColor Cyan
+
+    $results = Harden-AllFirewallProfiles
+
+    Write-Host "`n[📋] BEFORE:" -ForegroundColor DarkGray
+    Show-FirewallProfileState -State $results.Initial
+
+    Write-Host "[🛡️] AFTER:" -ForegroundColor DarkGreen
+    Show-FirewallProfileState -State $results.Final
+
+    $tsEnd = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[👽] $tsEnd - Firewall hardening routine completed." -ForegroundColor Cyan
 }
 
 
-<#
-.SYNOPSIS
-A simple convenience function to call Invoke-FirewallHardening with an extra log.
-
-.DESCRIPTION
-Prints a starting message, then calls Invoke-FirewallHardening,
-and optionally adds final logs or jokes.
-
-.EXAMPLE
-Harden-FirewallAndShowStatus
-#>
 function Harden-FirewallAndShowStatus {
     [CmdletBinding()]
     param()
 
-    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "[👽] $ts - Starting firewall hardening..." -ForegroundColor Cyan
+    <#
+    .SYNOPSIS
+    Convenience wrapper to run full firewall hardening with stylish UX and sarcasm.
+
+    .DESCRIPTION
+    Prints a start banner, invokes the full hardening sequence (audit → apply → show),
+    and finishes with a timestamped log + random sarcastic security quote.
+
+    This function is intended as the final step for firewall hardening in WinPostInstall.
+
+    .OUTPUTS
+    None. Writes all output to the console.
+
+    .EXAMPLE
+    Harden-FirewallAndShowStatus
+    #>
+
+    $tsStart = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[👽] $tsStart - Starting firewall hardening..." -ForegroundColor Cyan
     Write-Host ""
-    
+
     Invoke-FirewallHardening
 
-$messages = @(
-  "[🛡️] ...We sealed those open ports, but the NSA has a master key, allegedly.",
-  "[🛡️] ...We sealed those open ports, but the NSA has a master key, allegedly.",
-  "[🛡️] ...We sealed those open ports, but the NSA has a master key, allegedly.",
+    $messages = @(
+        "[🛡️] ...We sealed those open ports, but the NSA has a master key — allegedly.",
+        "[🛡️] ...We sealed those open ports, but the NSA has a master key — allegedly.",
+        "[🛡️] ...We sealed those open ports, but the NSA has a master key — allegedly.",
 
-  "[🔒] ...Your firewall is now a fortress. If only the OS wasn't a secret passage.",
-  "[🔒] ...Your firewall is now a fortress. If only the OS wasn't a secret passage.",
-  "[🔒] ...Your firewall is now a fortress. If only the OS wasn't a secret passage.",
+        "[👽] ...We locked the front door. Just remember: Windows is named after windows.",
+        "[👽] ...We locked the front door. Just remember: Windows is named after windows.",
+        "[👽] ...We locked the front door. Just remember: Windows is named after windows.",
 
-  "[👽] ...We locked the front door. Just be aware: Windows is named after windows for a reason.",
-  "[👽] ...We locked the front door. Just be aware: Windows is named after windows for a reason.",
-  "[👽] ...We locked the front door. Just be aware: Windows is named after windows for a reason.",
+        "[🧬] DefaultInboundAction set to Block. But Defender let Excel spawn PowerShell with -nop -w hidden anyway.",
+        "[🧬] DefaultInboundAction set to Block. But Defender let Excel spawn PowerShell with -nop -w hidden anyway.",
+        "[🧬] DefaultInboundAction set to Block. But Defender let Excel spawn PowerShell with -nop -w hidden anyway.",
 
-  "[🛸] ...Alien tech would never ship with hidden services. We tried our best to block them all.",
-  "[🛸] ...Alien tech would never ship with hidden services. We tried our best to block them all."
-  )
+        "[🔒] ...Your firewall is now a fortress. If only the OS wasn’t a secret passage.",
+        "[🔒] ...Your firewall is now a fortress. If only the OS wasn’t a secret passage.",
+
+        "[🚫] Domain profile hardened. Your AD still uses RC4, but hey — baby steps.",
+        "[🚫] Domain profile hardened. Your AD still uses RC4, but hey — baby steps.",
+
+        "[📊] Your profiles are hardened. And yet... svchost.exe still connects to 37 IPs before you even log in.",
+        "[📊] Your profiles are hardened. And yet... svchost.exe still connects to 37 IPs before you even log in.",
+
+        "[📶] Public profile locked. That open Wi-Fi named 'FBI Surveillance Van' is crying.",
+
+        "[🛸] ...Alien tech doesn’t have RDP exposed by default. We tried our best to match that."
+    )
+
+    $tsEnd = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "`n[👽] $tsEnd - Firewall hardening complete. Secure as can be (until next Windows update)." -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host ($messages | Get-Random) -ForegroundColor DarkYellow
+  }
+
+
+function Ensure-ComputerName {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory = $false)]
+        [string]$DesiredName = "root"
+    )
+
+    <#
+    .SYNOPSIS
+    Ensures the computer has a specific name.
+
+    .DESCRIPTION
+    Checks the current computer name and renames it if it does not match the target.
+    Does not reboot automatically. Returns an object containing rename status and metadata.
+
+    .PARAMETER DesiredName
+    Target computer name. Default is 'root'.
+
+    .OUTPUTS
+    [PSCustomObject] — With the following properties:
+    - OldName         [string]
+    - NewName         [string]
+    - Renamed         [bool]
+    - RequiresReboot  [bool]
+    - Success         [bool]
+
+    .EXAMPLE
+    $result = Ensure-ComputerName -DesiredName "root"
+    if ($result.RequiresReboot) { Restart-Computer }
+
+    .LINK
+    https://github.com/franckferman/WinPostInstall
+    #>
+
+    $currentName = $env:COMPUTERNAME
+
+    $result = [PSCustomObject]@{
+        OldName         = $currentName
+        NewName         = $DesiredName
+        Renamed         = $false
+        RequiresReboot  = $false
+        Success         = $true
+    }
+
+    if ($currentName -ieq $DesiredName) {
+        return $result
+    }
+
+    try {
+        Rename-Computer -NewName $DesiredName -Force -ErrorAction Stop
+        $result.Renamed = $true
+        $result.RequiresReboot = $true
+    }
+    catch {
+        $result.Success = $false
+    }
+
+    return $result
+}
+
+
+function Show-ComputerNameChangeResult {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNull()]
+        $Result
+    )
+
+    <#
+    .SYNOPSIS
+    Displays a styled summary of the computer name change attempt.
+
+    .DESCRIPTION
+    Prints a timestamped message showing whether the computer name was changed,
+    left unchanged, or failed to update. Designed for use with Ensure-ComputerName.
+
+    .PARAMETER Result
+    The object returned by Ensure-ComputerName, containing OldName, NewName, Renamed, RequiresReboot, and Success.
+
+    .EXAMPLE
+    $result = Ensure-ComputerName -DesiredName "root"
+    Show-ComputerNameChangeResult -Result $result
+    #>
 
     $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host ""
-    Write-Host "[👽] $ts - Done. Secure as can be (until next Windows update)." -ForegroundColor Cyan
-    Write-Host ($messages | Get-Random) -ForegroundColor DarkYellow
-}
 
+    if (-not $Result.Success) {
+        Write-Host "[💀] $ts - Failed to rename computer from '$($Result.OldName)' to '$($Result.NewName)'." -ForegroundColor Red
+        return
+    }
 
-<#
-.SYNOPSIS
-Ensures the computer has a specific name.
-
-.DESCRIPTION
-Checks the current computer name. If it differs from the target name,
-renames the computer (no automatic reboot). Returns an object with status info.
-
-.PARAMETER DesiredName
-Target computer name (default = 'root').
-
-.OUTPUTS
-[PSCustomObject] with properties: Renamed (bool), OldName, NewName, RequiresReboot (bool), Success (bool)
-#>
-function Ensure-ComputerName {
-  param(
-    [string]$DesiredName = "root"
-  )
-
-  $currentName = $env:COMPUTERNAME
-  $result = [PSCustomObject]@{
-    OldName    = $currentName
-    NewName    = $DesiredName
-    Renamed    = $false
-    RequiresReboot = $false
-    Success    = $true
-  }
-
-  if ($currentName -ieq $DesiredName) {
-    return $result
-  }
-
-  try {
-    Rename-Computer -NewName $DesiredName -Force -ErrorAction Stop
-    $result.Renamed = $true
-    $result.RequiresReboot = $true
-  } catch {
-    $result.Success = $false
-  }
-
-  return $result
-}
-
-
-<#
-.SYNOPSIS
-Displays the result of Ensure-ComputerName.
-
-.PARAMETER Result
-The result object returned from Ensure-ComputerName.
-#>
-function Show-ComputerNameChangeResult {
-  param(
-    [Parameter(Mandatory)]
-    $Result
-  )
-
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
-
-  if (-not $Result.Success) {
-    Write-Host "[💀] $ts - Failed to rename computer from '$($Result.OldName)' to '$($Result.NewName)'." -ForegroundColor Red
-    return
-  }
-
-  if (-not $Result.Renamed) {
-    Write-Host "[👽] $ts - Computer name is already '$($Result.OldName)'." -ForegroundColor Green
-  } else {
-    Write-Host "[!] $ts - Renamed '$($Result.OldName)' to '$($Result.NewName)'. Reboot is required." -ForegroundColor Yellow
-  }
+    if (-not $Result.Renamed) {
+        Write-Host "[👽] $ts - Computer name is already set to '$($Result.OldName)'." -ForegroundColor Green
+    }
+    else {
+        Write-Host "[⚠️] $ts - Renamed '$($Result.OldName)' → '$($Result.NewName)'. Reboot required." -ForegroundColor Yellow
+    }
 }
 
 
 function Ensure-ComputerNameAndShow {
-  param([string]$DesiredName = "root")
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$DesiredName = "root"
+    )
 
-  $result = Ensure-ComputerName -DesiredName $DesiredName
-  Show-ComputerNameChangeResult -Result $result
+    <#
+    .SYNOPSIS
+    Ensures the computer has the specified name and displays the result.
+
+    .DESCRIPTION
+    Combines Ensure-ComputerName and Show-ComputerNameChangeResult.
+    Renames the computer if needed and shows a styled result.
+
+    .PARAMETER DesiredName
+    The target computer name. Default is 'root'.
+
+    .OUTPUTS
+    None. Console output only.
+    #>
+
+    $result = Ensure-ComputerName -DesiredName $DesiredName
+    Show-ComputerNameChangeResult -Result $result
 }
 
 
-<#
-.SYNOPSIS
-Ensures the computer has a specific description.
-
-.DESCRIPTION
-Checks the current 'SrvComment' in the registry. If it differs from the target,
-updates it. Returns an object with status info.
-
-.PARAMETER DesiredDescription
-Target computer description to set. Default = "Alien Spaceship".
-
-.OUTPUTS
-[PSCustomObject] with properties: OldDescription, NewDescription, Changed, Success.
-
-.EXAMPLE
-Ensure-ComputerDescription
-
-.EXAMPLE
-Ensure-ComputerDescription -DesiredDescription "Laboratory #42"
-#>
 function Ensure-ComputerDescription {
-  [CmdletBinding()]
-  param(
-    [string]$DesiredDescription = "Alien Spaceship"
-  )
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$DesiredDescription
+    )
 
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
-  Write-Host "[👽] $ts - Attempting to set the computer description to '$DesiredDescription'..." -ForegroundColor Cyan
-  Write-Host ""
+    <#
+    .SYNOPSIS
+    Ensures the computer has a specific description.
 
-  $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters"
-  $regValue = "SrvComment"
+    .DESCRIPTION
+    If no description is provided, selects one randomly from a list of humorous defaults.
+    Checks the current 'SrvComment' value in the registry and updates it if needed.
 
-  $oldDesc = (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction SilentlyContinue).$regValue
+    .PARAMETER DesiredDescription
+    Optional. Target computer description. If omitted, picks one from a curated alien list.
 
-  $result = [PSCustomObject]@{
-    OldDescription = $oldDesc
-    NewDescription = $DesiredDescription
-    Changed    = $false
-    Success    = $true
-  }
+    .OUTPUTS
+    [PSCustomObject] — With:
+    - OldDescription [string]
+    - NewDescription [string]
+    - Changed        [bool]
+    - Success        [bool]
 
-  if ($oldDesc -ieq $DesiredDescription) {
+    .EXAMPLE
+    Ensure-ComputerDescription
+
+    .EXAMPLE
+    Ensure-ComputerDescription -DesiredDescription "Laboratory #42"
+    #>
+
+    $defaultDescriptions = @(
+        "Alien Spaceship",
+        "Remote DGSI Listening Node",
+        "Unregistered Time Machine",
+        "Portable Root CA Compromise Kit",
+        "SOC Analyst Containment Chamber",
+        "Retired Exploit Dev Terminal",
+        "Wazuh Telemetry Relay Station",
+        "AI Training Node #6",
+        "System32 Backdoor Emulator",
+        "Void Beacon (Don't reboot)"
+    )
+
+    if (-not $DesiredDescription) {
+        $DesiredDescription = Get-Random -InputObject $defaultDescriptions
+    }
+
+    $regPath  = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters"
+    $regValue = "SrvComment"
+
+    $oldDesc = (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction SilentlyContinue).$regValue
+
+    $result = [PSCustomObject]@{
+        OldDescription = $oldDesc
+        NewDescription = $DesiredDescription
+        Changed        = $false
+        Success        = $true
+    }
+
+    if ($oldDesc -ieq $DesiredDescription) {
+        return $result
+    }
+
+    try {
+        Set-ItemProperty -Path $regPath -Name $regValue -Value $DesiredDescription -Force
+        $result.Changed = $true
+    }
+    catch {
+        $result.Success = $false
+    }
+
     return $result
-  }
-
-  try {
-    Set-ItemProperty -Path $regPath -Name $regValue -Value $DesiredDescription -Force
-    $result.Changed = $true
-  }
-  catch {
-    $result.Success = $false
-  }
-
-  return $result
 }
 
 
-<#
-.SYNOPSIS
-Displays the result of Ensure-ComputerDescription.
-
-.PARAMETER Result
-The result object returned from Ensure-ComputerDescription.
-#>
 function Show-ComputerDescriptionChangeResult {
-  [CmdletBinding()]
-  param(
-    [Parameter(Mandatory)]
-    $Result
-  )
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        $Result
+    )
 
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
+    <#
+    .SYNOPSIS
+    Displays the result of Ensure-ComputerDescription.
 
-  if (-not $Result.Success) {
-    Write-Host "[💀] $ts - Failed to set computer description from '$($Result.OldDescription)' to '$($Result.NewDescription)'" -ForegroundColor Red
-    return
-  }
+    .DESCRIPTION
+    Prints the outcome of a description change attempt. If the description was modified,
+    includes a contextual alien-themed joke.
 
-  if (-not $Result.Changed) {
-    Write-Host "[👽] $ts - Computer description is already '$($Result.OldDescription)'." -ForegroundColor Green
-  }
-  else {
-    Write-Host "[!] $ts - Updated computer description from '$($Result.OldDescription)' to '$($Result.NewDescription)'" -ForegroundColor Yellow
-  }
+    .PARAMETER Result
+    The result object returned from Ensure-ComputerDescription.
+
+    .EXAMPLE
+    $result = Ensure-ComputerDescription
+    Show-ComputerDescriptionChangeResult -Result $result
+    #>
+
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+    if (-not $Result.Success) {
+        Write-Host "[💀] $ts - Failed to set computer description from '$($Result.OldDescription)' to '$($Result.NewDescription)'." -ForegroundColor Red
+        return
+    }
+
+    if (-not $Result.Changed) {
+        Write-Host "[👽] $ts - Computer description is already '$($Result.OldDescription)'." -ForegroundColor Green
+    }
+    else {
+        Write-Host "[⚠️] $ts - Updated computer description from '$($Result.OldDescription)' → '$($Result.NewDescription)'." -ForegroundColor Yellow
+
+        $messages = @(
+            "[📡] Broadcast enabled. Alien Control can now locate the device.",
+            "[🧠] Description updated. Expect more targeted telemetry soon.",
+            "[🛸] This workstation now reports to Orion Sector 7.",
+            "[🗂️] Description set. Microsoft now thinks this is a dev box. You’ll get more bugs.",
+            "[🤖] Description accepted. Initiating Skynet handshake..."
+        )
+
+        Write-Host ""
+        Write-Host ($messages | Get-Random) -ForegroundColor DarkYellow
+    }
 }
 
 
 function Ensure-ComputerDescriptionAndShow {
-  param([string]$DesiredDescription = "Alien Spaceship")
+    [CmdletBinding()]
+    param(
+        [string]$DesiredDescription
+    )
 
-  $result = Ensure-ComputerDescription -DesiredDescription $DesiredDescription
-  Show-ComputerDescriptionChangeResult -Result $result
+    <#
+    .SYNOPSIS
+    Ensures the computer has a specific description and shows the result.
+
+    .DESCRIPTION
+    Wrapper for Ensure-ComputerDescription and Show-ComputerDescriptionChangeResult.
+    Applies a custom or random description, then prints the outcome.
+
+    .PARAMETER DesiredDescription
+    Optional. If not specified, picks a random alien-themed description.
+
+    .EXAMPLE
+    Ensure-ComputerDescriptionAndShow
+    Ensure-ComputerDescriptionAndShow -DesiredDescription "Threat Analysis Node #42"
+    #>
+
+    $result = Ensure-ComputerDescription -DesiredDescription $DesiredDescription
+    Show-ComputerDescriptionChangeResult -Result $result
 }
 
 
-<#
-.SYNOPSIS
-Ensures the computer is in a specific workgroup.
-
-.DESCRIPTION
-- Checks if the computer is currently in a domain or already in the desired workgroup.
-- If it's in a domain or a different workgroup, calls 'Add-Computer -WorkgroupName ...' to change it.
-- Does not reboot automatically (you can add -Restart to Add-Computer if you want).
-- Returns a [PSCustomObject] summarizing the operation.
-
-.PARAMETER DesiredWorkgroup
-The target workgroup name. Default is 'WORKGROUP'.
-
-.OUTPUTS
-[PSCustomObject] with:
-- OldWorkgroup: current workgroup name (if in domain, it’s whatever Windows reports)
-- NewWorkgroup: the requested one
-- WasDomainJoined: boolean indicating if the machine was joined to a domain
-- OldDomain: if joined to a domain, which one
-- Changed: whether we actually changed the workgroup
-- RequiresReboot: whether a reboot is needed to fully finalize changes
-- Success: indicates if the operation succeeded
-#>
 function Ensure-Workgroup {
-  [CmdletBinding()]
-  param(
-    [string]$DesiredWorkgroup = "WORKGROUP"
-  )
+    [CmdletBinding()]
+    param(
+        [string]$DesiredWorkgroup
+    )
 
-  Write-Host "[👽] $ts - Attempting to set the computer's workgroup to '$DesiredWorkgroup'..." -ForegroundColor Cyan
-  Write-Host ""
+    <#
+    .SYNOPSIS
+    Ensures the computer is in a specific workgroup.
 
-  $comp     = Get-CimInstance -ClassName Win32_ComputerSystem
-  $oldWorkgroup = $comp.Workgroup
-  $domain    = $comp.Domain
-  $partOfDomain = $comp.PartOfDomain
+    .DESCRIPTION
+    - Checks if the computer is in a domain or already in the target workgroup.
+    - If no workgroup is provided, picks one from a curated list.
+    - If a change is needed, switches workgroup using 'Add-Computer'.
+    - Does not reboot automatically.
+    - Returns a structured object summarizing the operation.
 
-  $result = [PSCustomObject]@{
-    OldWorkgroup  = $oldWorkgroup
-    NewWorkgroup  = $DesiredWorkgroup
-    WasDomainJoined = $partOfDomain
-    OldDomain    = if ($partOfDomain) { $domain } else { $null }
-    Changed     = $false
-    RequiresReboot = $false
-    Success     = $true
-  }
+    .PARAMETER DesiredWorkgroup
+    The desired workgroup name. If omitted, a random one is chosen.
 
-  if (-not $partOfDomain -and $oldWorkgroup -ieq $DesiredWorkgroup) {
+    .OUTPUTS
+    [PSCustomObject] with:
+    - OldWorkgroup     [string]
+    - NewWorkgroup     [string]
+    - WasDomainJoined  [bool]
+    - OldDomain        [string]
+    - Changed          [bool]
+    - RequiresReboot   [bool]
+    - Success          [bool]
+
+    .EXAMPLE
+    Ensure-Workgroup
+
+    .EXAMPLE
+    Ensure-Workgroup -DesiredWorkgroup "DGSI"
+    #>
+
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+    if (-not $DesiredWorkgroup) {
+        $choices = @(
+            "DGSI",
+            "SKYNET",
+            "WAZUH-NODE",
+            "BLACKNET",
+            "VOIDNET",
+            "LAB-42",
+            "PROTOCORE",
+            "XENOSPHERE",
+            "NEUTRALIZED"
+        )
+        $DesiredWorkgroup = Get-Random -InputObject $choices
+        Write-Host "[👽] $ts - No workgroup specified. Chose '$DesiredWorkgroup' randomly." -ForegroundColor Magenta
+    } else {
+        Write-Host "[👽] $ts - Attempting to set the computer's workgroup to '$DesiredWorkgroup'..." -ForegroundColor Cyan
+    }
+
+    Write-Host ""
+
+    $comp           = Get-CimInstance -ClassName Win32_ComputerSystem
+    $oldWorkgroup   = $comp.Workgroup
+    $domain         = $comp.Domain
+    $partOfDomain   = $comp.PartOfDomain
+
+    $result = [PSCustomObject]@{
+        OldWorkgroup     = $oldWorkgroup
+        NewWorkgroup     = $DesiredWorkgroup
+        WasDomainJoined  = $partOfDomain
+        OldDomain        = if ($partOfDomain) { $domain } else { $null }
+        Changed          = $false
+        RequiresReboot   = $false
+        Success          = $true
+    }
+
+    if (-not $partOfDomain -and $oldWorkgroup -ieq $DesiredWorkgroup) {
+        return $result
+    }
+
+    try {
+        Add-Computer -WorkGroupName $DesiredWorkgroup -Force -ErrorAction Stop
+        $result.Changed        = $true
+        $result.RequiresReboot = $true
+    }
+    catch {
+        $result.Success = $false
+    }
+
     return $result
-  }
-
-  try {
-    Add-Computer -WorkGroupName $DesiredWorkgroup -Force -ErrorAction Stop
-    $result.Changed    = $true
-    $result.RequiresReboot = $true
-  }
-  catch {
-    $result.Success = $false
-  }
-
-  return $result
 }
 
 
-<#
-.SYNOPSIS
-Displays the result of Ensure-Workgroup.
-
-.PARAMETER Result
-The result object returned from Ensure-Workgroup.
-#>
 function Show-WorkgroupChangeResult {
-  [CmdletBinding()]
-  param(
-    [Parameter(Mandatory)]
-    $Result
-  )
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        $Result
+    )
 
-  $ts = Get-Date -Format "M/d/yyyy h:mm:ss tt"
+    <#
+    .SYNOPSIS
+    Displays the result of Ensure-Workgroup.
 
-  if (-not $Result.Success) {
-    Write-Host "[💀] $ts - Failed to switch workgroup. " -ForegroundColor Red
-    if ($Result.WasDomainJoined) {
-      Write-Host "    Machine was in domain '$($Result.OldDomain)'" -ForegroundColor Red
-    }
-    else {
-      Write-Host "    Machine was in workgroup '$($Result.OldWorkgroup)'" -ForegroundColor Red
-    }
-    Write-Host "    Intended: '$($Result.NewWorkgroup)'" -ForegroundColor Red
-    return
-  }
+    .DESCRIPTION
+    Prints the outcome of a workgroup switch attempt. Includes extra context if the
+    machine was previously domain-joined, and appends a fun/sarcastic message if changed.
 
-  if (-not $Result.Changed) {
-    Write-Host "[👽] $ts - Already in workgroup '$($Result.OldWorkgroup)'. No changes made." -ForegroundColor Green
-  }
-  else {
-    if ($Result.WasDomainJoined) {
-      Write-Host "[!] $ts - Removed from domain '$($Result.OldDomain)' to join workgroup '$($Result.NewWorkgroup)'. Reboot required." -ForegroundColor Yellow
+    .PARAMETER Result
+    The result object returned from Ensure-Workgroup.
+    #>
+
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+    if (-not $Result.Success) {
+        Write-Host "[💀] $ts - Failed to switch workgroup." -ForegroundColor Red
+
+        if ($Result.WasDomainJoined) {
+            Write-Host "    Domain: '$($Result.OldDomain)'" -ForegroundColor Red
+        } else {
+            Write-Host "    Workgroup: '$($Result.OldWorkgroup)'" -ForegroundColor Red
+        }
+
+        Write-Host "    Intended: '$($Result.NewWorkgroup)'" -ForegroundColor Red
+        return
     }
-    else {
-      Write-Host "[!] $ts - Changed workgroup from '$($Result.OldWorkgroup)' to '$($Result.NewWorkgroup)'. Reboot required." -ForegroundColor Yellow
+
+    if (-not $Result.Changed) {
+        Write-Host "[👽] $ts - Already in workgroup '$($Result.OldWorkgroup)'. No changes made." -ForegroundColor Green
+    } else {
+        if ($Result.WasDomainJoined) {
+            Write-Host "[⚠️] $ts - Removed from domain '$($Result.OldDomain)' → joined workgroup '$($Result.NewWorkgroup)'. Reboot required." -ForegroundColor Yellow
+        } else {
+            Write-Host "[⚠️] $ts - Changed workgroup from '$($Result.OldWorkgroup)' → '$($Result.NewWorkgroup)'. Reboot required." -ForegroundColor Yellow
+        }
+
+        $messages = @(
+            "[🪐] This machine now floats in the void, free from domain gravity.",
+            "[☢️] GPOs? Where we're going, we don't need GPOs.",
+            "[🧬] This box just dropped off the radar like MH370."
+        )
+
+        Write-Host ""
+        Write-Host ($messages | Get-Random) -ForegroundColor DarkYellow
     }
-  }
 }
 
 
 function Ensure-WorkgroupAndShow {
-  param([string]$DesiredWorkgroup = "WORKGROUP")
+    [CmdletBinding()]
+    param(
+        [string]$DesiredWorkgroup = "WORKGROUP"
+    )
 
-  $result = Ensure-Workgroup -DesiredWorkgroup $DesiredWorkgroup
-  Show-WorkgroupChangeResult -Result $result
+    <#
+    .SYNOPSIS
+    Ensures the computer is in a specific workgroup and shows the result.
+
+    .DESCRIPTION
+    Wrapper for Ensure-Workgroup and Show-WorkgroupChangeResult.
+    Attempts to set the system's workgroup (or rejoin if different), and displays the outcome.
+    Adds humorous commentary if a change was applied.
+
+    .PARAMETER DesiredWorkgroup
+    The name of the workgroup to enforce. Default is 'WORKGROUP'.
+
+    .EXAMPLE
+    Ensure-WorkgroupAndShow
+
+    .EXAMPLE
+    Ensure-WorkgroupAndShow -DesiredWorkgroup "DGSI"
+    #>
+
+    $result = Ensure-Workgroup -DesiredWorkgroup $DesiredWorkgroup
+    Show-WorkgroupChangeResult -Result $result
 }
 
 
-function Set-DisplayExtendBottomTop {
-  <#
-  .SYNOPSIS
-  Opens the DisplaySwitch GUI and simulates keystrokes to extend display (dual-screen) mode.
+function Set-DisplayExtendModeByBottomTop {
+    [CmdletBinding()]
+    param()
 
-  .DESCRIPTION
-  This function launches DisplaySwitch.exe, waits for the UI to load, navigates using simulated keystrokes to select the "Extend" display mode,
-  confirms it with ENTER, then closes the window with ESC.
+    <#
+    .SYNOPSIS
+    Sets the display mode to "Extend" using DisplaySwitch.exe and simulated keystrokes.
 
-  NOTE: Windows does not provide a CLI option to control screen positions (e.g., screen 1 below screen 2), but you can extend displays with this.
+    .DESCRIPTION
+    Launches DisplaySwitch, sends keystrokes to select "Extend display" mode (Win+P → Down → Enter),
+    then dismisses the menu. Useful for setups where automatic screen extension is needed but not natively scriptable.
 
-  .OUTPUTS
-  Console messages with status.
-  #>
+    NOTE: This does NOT position screens (e.g., bottom/top or left/right) — Windows doesn’t expose that via CLI.
 
-  Add-Type -AssemblyName System.Windows.Forms
+    .OUTPUTS
+    Console output with status updates.
 
-  try {
-    Write-Host "[👽] Launching DisplaySwitch to change display mode..." -ForegroundColor Cyan
-    Start-Process "DisplaySwitch.exe"
-    Start-Sleep -Seconds 2
+    .EXAMPLE
+    Set-DisplayExtendModeByBottomTop
+    #>
 
-    Write-Host "[👽] Navigating to 'Extend display' mode..." -ForegroundColor Cyan
-    [System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
-    Start-Sleep -Milliseconds 400
+    Add-Type -AssemblyName System.Windows.Forms
 
-    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
-    Start-Sleep -Milliseconds 400
+    try {
+        Write-Host "[👽] Launching DisplaySwitch.exe..." -ForegroundColor Cyan
+        Start-Process "DisplaySwitch.exe"
+        Start-Sleep -Seconds 1.5
 
-    Write-Host "[👽] Closing DisplaySwitch UI..." -ForegroundColor Cyan
-    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+        Write-Host "[👽] Sending keystrokes to select 'Extend display'..." -ForegroundColor Cyan
+        [System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+        Start-Sleep -Milliseconds 300
 
-    Write-Host "[👽] Display mode should now be set to 'Extend'." -ForegroundColor Green
-  } catch {
-    Write-Host "[💀] Failed to switch display mode: $($_.Exception.Message)" -ForegroundColor Red
-  }
+        [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
+        Start-Sleep -Milliseconds 400
+
+        [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+        Write-Host "[✅] Display mode set to 'Extend'." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[💀] Failed to switch display mode: $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 
@@ -4828,7 +5224,7 @@ function Apply-SystemConfiguration {
   Ensure-ComputerDescriptionAndShow
   Set-OEMInformation
   Ensure-WorkgroupAndShow -DesiredWorkgroup "DGSI"
-  Set-DisplayExtendBottomTop
+  Set-DisplayExtendModeByBottomTop
   Set-PowerSettings
   Pin-ToStartMenu -TargetPaths "C:\", "A:\"
   Disable-FastStartup
@@ -5034,5 +5430,10 @@ if ($Help) {
   Remove-BloatwarePackages -AppsList @("Microsoft.GetHelp", "Microsoft.People", "Microsoft.YourPhone", "Microsoft.GetStarted", "Microsoft.Messaging", "Microsoft.MicrosoftSolitaireCollection", "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "Microsoft.Office.OneNote", "Microsoft.OneConnect", "Microsoft.SkypeApp", "Microsoft.CommsPhone", "Microsoft.Office.Sway", "Microsoft.WindowsFeedbackHub", "Microsoft.ConnectivityStore", "Microsoft.BingFoodAndDrink", "Microsoft.BingHealthAndFitness", "Microsoft.BingTravel", "Microsoft.WindowsReadingList", "DB6EA5DB.MediaSuiteEssentialsforDell", "DB6EA5DB.Power2GoforDell", "DB6EA5DB.PowerDirectorforDell", "DB6EA5DB.PowerMediaPlayerforDell", "DellInc.DellDigitalDelivery", "*Disney*", "*EclipseManager*", "*ActiproSoftwareLLC*", "*AdobeSystemsIncorporated.AdobePhotoshopExpress*", "*Duolingo-LearnLanguagesforFree*", "*PandoraMediaInc*", "*CandyCrush*", "*BubbleWitch3Saga*", "*Wunderlist*", "*Flipboard*", "*Royal Revolt*", "*Sway*", "*Speed Test*", "46928bounde.EclipseManager", "613EBCEA.PolarrPhotoEditorAcademicEdition", "7EE7776C.LinkedInforWindows", "89006A2E.AutodeskSketchBook", "ActiproSoftwareLLC.562882FEEB491", "CAF9E577.Plex", "ClearChannelRadioDigital.iHeartRadio", "Drawboard.DrawboardPDF", "Fitbit.FitbitCoach", "Flipboard.Flipboard", "KeeperSecurityInc.Keeper", "Microsoft.BingNews", "TheNewYorkTimes.NYTCrossword", "WinZipComputing.WinZipUniversal", "A278AB0D.MarchofEmpires", "6Wunderkinder.Wunderlist", "A278AB0D.DisneyMagicKingdoms", "2FE3CB00.PicsArt-PhotoStudio", "D52A8D61.FarmVille2CountryEscape", "D5EA27B7.Duolingo-LearnLanguagesforFree", "DB6EA5DB.CyberLinkMediaSuiteEssentials", "GAMELOFTSA.Asphalt8Airborne", "NORDCURRENT.COOKINGFEVER", "PandoraMediaInc.29680B314EFC2", "Playtika.CaesarsSlotsFreeCasino", "ShazamEntertainmentLtd.Shazam", "ThumbmunkeysLtd.PhototasticCollage", "TuneIn.TuneInRadio", "XINGAG.XING", "flaregamesGmbH.RoyalRevolt2", "king.com.*", "king.com.BubbleWitch3Saga", "king.com.CandyCrushSaga", "king.com.CandyCrushSodaSaga", "*Clipchamp*", "*Solitaire*")
   Setup-ExegolWithWSL
   } else {
-  main
+  # main
+  # Get-Banner
+  # Get-FirewallEnabledStatus
+  # Get-FirewallEnabledStatus -Profiles "Private", "Public"
+  # Harden-FirewallAndShowStatus
+  # Ensure-ComputerNameAndShow -DesiredName "root"
   }
